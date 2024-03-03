@@ -38,7 +38,7 @@ namespace Catalog.Controllers
             return NotFound();
         }
 
-        [HttpGet("GetBookByTitle")]
+        [HttpGet("GetBookByTitle/{title}")]
         [ProducesResponseType(typeof(Book), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Book>> GetBookByTitle(string title)
         {
@@ -46,7 +46,7 @@ namespace Catalog.Controllers
             return Ok(book);
         }
 
-        [HttpGet("GetBooksByAuthor")]
+        [HttpGet("GetBooksByAuthor/{authorName}")]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Book>> GetBooksByAuthor(string authorName)
         {
@@ -54,7 +54,7 @@ namespace Catalog.Controllers
             return Ok(books);
         }
 
-        [HttpGet("GetBooksByPublisher")]
+        [HttpGet("GetBooksByPublisher/{publisher}")]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Book>> GetBooksByPublisher(string publisher)
         {
@@ -62,7 +62,7 @@ namespace Catalog.Controllers
             return Ok(books);
         }
 
-        [HttpGet("GetBooksByGenre")]
+        [HttpGet("GetBooksByGenre/{genre}")]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Book>> GetBooksByGenre(string genre)
         {

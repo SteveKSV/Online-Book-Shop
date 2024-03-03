@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Order.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/[controller]")]
     public class OrderController : ControllerBase
     {
         private readonly IMediator _mediator;
