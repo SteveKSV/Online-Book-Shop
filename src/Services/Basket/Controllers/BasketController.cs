@@ -1,8 +1,11 @@
 ﻿using Basket.API.GrpcServices;
 using Basket.Entities;
 using Basket.Managers.Interfaces;
+using EventBusMessages.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Reflection.Emit;
 
 namespace Basket.Controllers
 {
@@ -12,11 +15,12 @@ namespace Basket.Controllers
     {
         private readonly IBasketManager _repository;
         private readonly DiscountGrpcService _discountGrpcService;
-
-        public BasketController(IBasketManager repository, DiscountGrpcService discountGrpcService)
+        private readonly IPublishEndpoint _publishEndpoint;
+        public BasketController(IBasketManager repository, DiscountGrpcService discountGrpcService, IPublishEndpoint publishEndpoint = null)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _discountGrpcService = discountGrpcService ?? throw new ArgumentNullException(nameof(discountGrpcService)); ;
+            _discountGrpcService = discountGrpcService ?? throw new ArgumentNullException(nameof(discountGrpcService));
+            _publishEndpoint = publishEndpoint ?? throw new ArgumentNullException(nameof(discountGrpcService));
         }
 
         [HttpGet("{userName}")]
@@ -63,6 +67,53 @@ namespace Basket.Controllers
         {
             await _repository.DeleteBasket(userName);
             return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpPost]
+        [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Checkout([FromBody] BasketCheckout basketCheckout)
+        {
+            // get existing basket with total price            
+            // Set TotalPrice on basketCheckout eventMessage
+            // send checkout event to rabbitmq
+            // remove the basket
+
+            // get existing basket with total price
+            var basket = await _repository.GetBasket(basketCheckout.UserName);
+            if (basket == null)
+            {
+                return BadRequest();
+            }
+
+            // send checkout event to rabbitmq
+            var eventMessage = new BasketCheckoutEvent()
+            {
+                UserName = basketCheckout.UserName,
+                Quantity = basketCheckout.Quantity,
+                TotalPrice = basketCheckout.TotalPrice,
+                FirstName = basketCheckout.FirstName,
+                LastName = basketCheckout.LastName,
+                EmailAddress = basketCheckout.EmailAddress,
+                AddressLine = basketCheckout.AddressLine,
+                Country = basketCheckout.Country,
+                State = basketCheckout.State,
+                ZipCode = basketCheckout.ZipCode,
+                CardName = basketCheckout.CardName,
+                CardNumber = basketCheckout.CardNumber,
+                Expiration = basketCheckout.Expiration,
+                CVV = basketCheckout.CVV,
+                PaymentMethod = basketCheckout.PaymentMethod,
+            }; 
+
+            eventMessage.TotalPrice = basket.TotalPrice;
+            await _publishEndpoint.Publish<BasketCheckoutEvent>(eventMessage);
+
+            // remove the basket
+            await _repository.DeleteBasket(basket.UserName);
+
+            return Accepted();
         }
     }
 }

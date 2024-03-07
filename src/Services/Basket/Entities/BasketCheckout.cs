@@ -3,6 +3,7 @@
     public class BasketCheckout
     {
         public string UserName { get; set; }
+        public int Quantity { get; set; }
         public decimal TotalPrice { get; set; }
 
         // BillingAddress

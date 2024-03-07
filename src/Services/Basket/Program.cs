@@ -2,9 +2,9 @@ using Basket.Managers.Interfaces;
 using Basket.Managers;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using Grpc.Net.Client;
 using Discount.Grpc;
 using Basket.API.GrpcServices;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +19,19 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 builder.Services.AddScoped<IBasketManager, BasketManager>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+//////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
+
+builder.Services.AddMassTransit(x =>
+{
+    x.SetKebabCaseEndpointNameFormatter();
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host(new Uri(builder.Configuration.GetValue<string>("EventBusSettings:HostAddress")));
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
 
 //////////////////////// DISCOUNT gRPC CONFIGURATION ///////////////////////////////
 string connStr = builder.Configuration.GetValue<string>("DiscountGrpcConnection:ConnectionString");

@@ -31,7 +31,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Services\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ApiGateways", "ApiGateways", "{C4F35FA3-C3FF-4447-B952-06A1E52B969A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OcelotApiGw", "ApiGateways\OcelotApiGw\OcelotApiGw.csproj", "{963F005C-C466-46E8-A017-6910DA7364AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OcelotApiGw", "ApiGateways\OcelotApiGw\OcelotApiGw.csproj", "{963F005C-C466-46E8-A017-6910DA7364AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBus", "EventBus", "{3092A182-2BB6-4F21-9BC6-22989FE8A663}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBusMessages", "EventBusMessages\EventBusMessages.csproj", "{9415D434-00CB-4FC2-A8A7-1AC122BC6740}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -75,6 +79,10 @@ Global
 		{963F005C-C466-46E8-A017-6910DA7364AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{963F005C-C466-46E8-A017-6910DA7364AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{963F005C-C466-46E8-A017-6910DA7364AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9415D434-00CB-4FC2-A8A7-1AC122BC6740}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9415D434-00CB-4FC2-A8A7-1AC122BC6740}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9415D434-00CB-4FC2-A8A7-1AC122BC6740}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9415D434-00CB-4FC2-A8A7-1AC122BC6740}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +101,7 @@ Global
 		{E639D703-F713-449A-8252-B12B20AF9B0F} = {0FF7BC23-2070-4FA2-97E8-E0CD9BD5F80F}
 		{05ACFFEB-2752-4C6E-B483-D6F23BF1C5FC} = {0FF7BC23-2070-4FA2-97E8-E0CD9BD5F80F}
 		{963F005C-C466-46E8-A017-6910DA7364AB} = {C4F35FA3-C3FF-4447-B952-06A1E52B969A}
+		{9415D434-00CB-4FC2-A8A7-1AC122BC6740} = {3092A182-2BB6-4F21-9BC6-22989FE8A663}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30E0643D-A90E-4183-9FCB-3BD83E2ED9EB}

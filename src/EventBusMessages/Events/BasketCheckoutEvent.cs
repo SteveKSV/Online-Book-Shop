@@ -1,11 +1,19 @@
-﻿using Domain.Entities;
-using MediatR;
-
-namespace Application.Features.Orders.Commands
+﻿namespace EventBusMessages.Events
 {
-    public class CheckoutOrder : IRequest<Order>
+    public class BasketCheckoutEvent
     {
-        public Guid Id { get; set; }
+        public BasketCheckoutEvent()
+        {
+            Id = Guid.NewGuid();
+            CreationDate = DateTime.UtcNow;
+        }
+        public BasketCheckoutEvent(Guid id, DateTime createDate)
+        {
+            Id = id;
+            CreationDate = createDate;
+        }
+        public Guid Id { get; private set; }
+        public DateTime CreationDate { get; private set; }
         public string UserName { get; set; }
         public decimal TotalPrice { get; set; }
         public int Quantity { get; set; }
