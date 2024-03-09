@@ -5,7 +5,7 @@ namespace Application.Features.Orders.Queries
 {
     public class GetAllOrders : IRequest<List<Order>>
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string UserName { get; set; }
         public decimal TotalPrice { get; set; }
         public int Quantity { get; set; }

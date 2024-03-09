@@ -21,11 +21,19 @@ namespace Infrastructure.Repositories
             return orders ?? throw new Exception($"GetAllOrders - Order Repository -> not found");
         }
 
-        public async Task<Order> GetOrderById(int id)
+        public async Task<Order> GetOrderById(Guid id)
         {
             Order order = await _dbContext.Orders.FindAsync(id);
 
             return order ?? throw new Exception($"GetOrderById - Order Repository -> Id: {id} wasn't found");
+        }
+
+        public async Task<List<Order>> GetOrdersByUsername(string userName)
+        {
+            var orderList = await _dbContext.Orders
+                                .Where(o => o.UserName == userName)
+                                .ToListAsync();
+            return orderList;
         }
         public async Task<Order> CheckoutOrder(Order order)
         {
@@ -42,7 +50,7 @@ namespace Infrastructure.Repositories
             return order;
         }
 
-        public async Task<bool> DeleteOrder(int id)
+        public async Task<bool> DeleteOrder(Guid id)
         {
             Order order = await _dbContext.Orders.FindAsync(id);
 

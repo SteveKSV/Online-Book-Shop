@@ -1,13 +1,9 @@
-﻿using MediatR;
-
-namespace Application.Features.Orders.Commands
+﻿namespace Shopping.Aggregator.Models
 {
-    public class UpdateOrder : IRequest<bool>
+    public class OrderResponseModel
     {
-        public Guid Id { get; set; }
         public string UserName { get; set; }
         public decimal TotalPrice { get; set; }
-        public int Quantity { get; set; }
 
         // BillingAddress
         public string FirstName { get; set; }

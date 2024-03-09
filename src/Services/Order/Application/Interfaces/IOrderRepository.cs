@@ -5,9 +5,11 @@ namespace Application.Interfaces
     public interface IOrderRepository
     {
         Task<List<Order>> GetAllOrders();
-        Task<Order> GetOrderById(int id);
+        Task<Order> GetOrderById(Guid id);
         Task<Order> CheckoutOrder(Order order);
         Task<bool> UpdateOrder(Order order);
-        Task<bool> DeleteOrder(int id);
+        Task<bool> DeleteOrder(Guid id);
+
+        Task<List<Order>> GetOrdersByUsername(string username);
     }
 }

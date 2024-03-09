@@ -21,7 +21,7 @@ builder.Services.AddMassTransit(config =>
 
     config.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(new Uri(builder.Configuration.GetValue<string>("EventBusSettings:HostAddress")));
+        cfg.Host(new Uri(builder.Configuration.GetValue<string>("EventBusSettings:HostAddress")!));
         cfg.ReceiveEndpoint(EventBusConstants.BasketCheckoutQueue, c =>
         {
             c.ConfigureConsumer<BasketCheckoutConsumer>(context);

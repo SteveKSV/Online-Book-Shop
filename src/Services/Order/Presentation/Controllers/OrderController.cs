@@ -3,6 +3,7 @@ using Application.Features.Orders.Queries;
 using Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Order.Controllers
 {
@@ -25,10 +26,18 @@ namespace Order.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetOrderByIdAsync(int id)
+        public async Task<ActionResult> GetOrderByIdAsync(Guid id)
         {
             var order = await _mediator.Send(new GetOrderById() { Id = id });
             return Ok(order);
+        }
+
+        [HttpGet("GetByUsername/{userName}")]
+        public async Task<ActionResult> GetByUsername(string userName)
+        {
+            var query = new GetOrdersByUsername(userName);
+            var orders = await _mediator.Send(query);
+            return Ok(orders);
         }
 
         [HttpPost]
@@ -50,7 +59,7 @@ namespace Order.Controllers
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteOrderAsync(int id)
+        public async Task<ActionResult> DeleteOrderAsync(Guid id)
         {
             if (await _mediator.Send(new DeleteOrder() { Id = id}))
             {
