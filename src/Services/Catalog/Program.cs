@@ -15,6 +15,15 @@ builder.Services.AddScoped<IBookManager, BookManager>();
 //////////////////////// CONTROLLERS CONFIGURATION ///////////////////////////////
 builder.Services.AddControllers();
 
+//////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
+builder.Services.AddAuthentication("Bearer")
+          .AddIdentityServerAuthentication("Bearer", options =>
+          {
+              options.Authority = "https://localhost:5006";
+              options.ApiName = "Catalog";
+          });
+
+
 //////////////////////// SWAGGER CONFIGURATION ///////////////////////////////
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -30,7 +39,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Catalog.API v1"));
 }
 
-
+app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

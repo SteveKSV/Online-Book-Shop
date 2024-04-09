@@ -1,5 +1,6 @@
 ﻿using Catalog.Entities;
 using Catalog.Managers.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -7,6 +8,7 @@ namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;

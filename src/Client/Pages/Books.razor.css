@@ -1,0 +1,20 @@
+﻿.card
+{
+    transition: transform 0.3s;
+    height: 200px; 
+    overflow: hidden;
+}
+
+.card:hover
+{
+   transform: scale(1.05);
+   height: auto;
+}
+
+.card-body {
+    overflow: hidden; 
+}
+
+h1, h5, card-body{
+    text-align: center
+}
