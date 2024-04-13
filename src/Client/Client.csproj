@@ -6,8 +6,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\SearchBar.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="IdentityModel" Version="5.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.28" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Pages\SearchBar.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\SearchBar.razor" />
   </ItemGroup>
 
 </Project>

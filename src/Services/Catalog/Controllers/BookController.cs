@@ -20,9 +20,9 @@ namespace Catalog.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(string? title = null, string? author = null, string? publisher = null)
         {
-            var products = await _manager.GetBooks();
+            var products = await _manager.GetBooks(title, author, publisher);
             return Ok(products);
         }
 

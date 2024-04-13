@@ -46,9 +46,26 @@ namespace Catalog.Managers
                           .ToListAsync();
         }
 
-        public async Task<IEnumerable<Book>> GetBooks()
+        public async Task<IEnumerable<Book?>> GetBooks(string? title, string? author, string? publisher)
         {
-            return await _collection.Find(new BsonDocument()).ToListAsync();
+            IEnumerable<Book?> books = await _collection.Find(new BsonDocument()).ToListAsync(); ;
+
+            if (!string.IsNullOrEmpty(title))
+            {
+                books = books.Where(prop => prop!.Title == title);
+            }
+
+            if (!string.IsNullOrEmpty(author))
+            {
+                books = books.Where(prop => prop!.AuthorName == author);
+            }
+
+            if (!string.IsNullOrEmpty(publisher))
+            {
+                books = books.Where(prop => prop!.PublisherName == publisher);
+            }
+
+            return books;
         }
     }
 }
