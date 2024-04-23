@@ -2,15 +2,30 @@
     transition: transform 0.3s;
     height: 220px;
 }
-
+.card-anchor {
+    text-decoration: none !important;
+    color: inherit;
+}
 .card:hover {
-        transform: scale(1.05);
+    transform: scale(1.05);
 }
 
 h1, h5, .card-body {
     text-align: center;
 }
 
+
+.scrollable-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+    position: fixed;
+    top: 50px;
+    right: 0;
+    width: 20%;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
 
 @media (max-width: 576px){
     .flex-sm-row {

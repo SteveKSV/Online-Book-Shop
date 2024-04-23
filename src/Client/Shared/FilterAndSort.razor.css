@@ -7,18 +7,6 @@ h7 {
     font-weight: bold;
 }
 
-.scrollable-panel {
-    max-height: 80vh;
-    overflow-y: auto;
-    position: fixed;
-    top: 50px;
-    right: 0;
-    width: 20%;
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 @media (min-width: 768px) and (max-width: 992px) {
     .scrollable-panel {
         position: static;

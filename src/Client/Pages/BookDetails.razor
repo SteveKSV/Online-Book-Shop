@@ -1,0 +1,23 @@
+﻿@page "/bookdetails/{bookTitle}"
+
+<h1>Book Details</h1>
+
+@if (Book != null)
+{
+    <div>
+        <h2>@Book.Title</h2>
+        <p>Author: @Book.AuthorName</p>
+        <p>Description: @Book.Description</p>
+        <!-- Додайте інші поля, які ви хочете відобразити -->
+    </div>
+}
+else
+{
+    <p>Book not found</p>
+}
+
+<button @onclick="GoBack">Go Back</button>
+
+@code {
+   
+}
