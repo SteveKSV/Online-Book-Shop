@@ -6,7 +6,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-
 //////////////////////// HTTP CLIENT CONFIGURATION ///////////////////////////////
 builder.Services.AddHttpClient();
 

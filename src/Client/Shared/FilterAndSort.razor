@@ -1,0 +1,134 @@
+﻿
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+<div>
+    <div class="d-flex flex-column flex-md-row flex-sm-column align-content-sm-center justify-content-around mb-medium">
+            <div>
+                <h7>Sort by Price:</h7>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" checked @onclick='() => SortByPrice("asc")'>
+                    <label class="form-check-label" for="sortPriceAsc">
+                        Low to High
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDesc" value="desc" @onclick='() => SortByPrice("desc")'>
+                    <label class="form-check-label" for="sortPriceDesc">
+                        High to Low
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h7 class="mt-4 mt-md-0 mt-sm-0">Filter by Genre:</h7>
+                <!-- Checkboxes for genres -->
+                @foreach (var genre in Genres)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="@($"chk_{genre}")"
+                               value="@genre" @onchange="(e) => UpdateFilteredBooksByGenre(genre, e)">
+                        <label class="form-check-label" for="@($"chk_{genre}")">
+                            @genre
+                        </label>
+                    </div>
+                }
+            </div>
+            <div>
+                <h7 class="mt-4 mt-md-0 mt-sm-0">Filter by Language:</h7>
+                <!-- Checkboxes for languages -->
+                @foreach (var language in Languages)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="@($"chk_{language}")"
+                           value="@language" @onchange="(e) => UpdateFilteredBooksByLanguage(language, e)">
+                         <label class="form-check-label" for="@($"chk_{language}")">
+                            @language
+                        </label>
+                    </div>
+                }
+            </div>
+     </div>
+
+    <div class="text-center">
+        <button class="btn btn-secondary mt-3" @onclick="ClearFilters">Clear Filters</button>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnSort { get; set; }
+
+    [Parameter]
+    public EventCallback<List<string>> OnFilterByGenres { get; set; }
+
+    [Parameter]
+    public EventCallback<List<string>> OnFilterByLanguages { get; set; }
+
+    // [Parameter]
+    // public List<TEntity> Items { get; set; }
+
+    [Parameter]
+    public List<string> Genres { get; set; }
+
+    [Parameter]
+    public List<string> Languages { get; set; }
+
+    private List<string> selectedGenres = new();
+    private List<string> selectedLanguages = new();
+
+    private async Task SortByPrice(string sortOrder)
+    {
+        await OnSort.InvokeAsync(sortOrder);
+    }
+
+    private async Task UpdateFilteredBooksByGenre(string selectedGenre, ChangeEventArgs e)
+    {
+        bool isChecked = (bool)e.Value;
+
+        // Update the selectedGenres list
+        if (isChecked && !selectedGenres.Contains(selectedGenre))
+        {
+            selectedGenres.Add(selectedGenre);
+        }
+        else if (!isChecked && selectedGenres.Contains(selectedGenre))
+        {
+            selectedGenres.Remove(selectedGenre);
+        }
+
+        // Invoke the event to notify the parent component of the selected genres
+        await OnFilterByGenres.InvokeAsync(selectedGenres);
+    }
+
+    private async Task UpdateFilteredBooksByLanguage(string selectedLanguage, ChangeEventArgs e)
+    {
+        bool isChecked = (bool)e.Value;
+
+        // Update the selectedGenres list
+        if (isChecked && !selectedLanguages.Contains(selectedLanguage))
+        {
+            selectedLanguages.Add(selectedLanguage);
+        }
+        else if (!isChecked && selectedLanguages.Contains(selectedLanguage))
+        {
+            selectedLanguages.Remove(selectedLanguage);
+        }
+
+        // Invoke the event to notify the parent component of the selected genres
+        await OnFilterByLanguages.InvokeAsync(selectedLanguages);
+    }
+
+    private async Task ClearFilters()
+    {
+        // Clear selectedGenres list
+        selectedGenres.Clear();
+        selectedLanguages.Clear();
+
+        // Invoke JavaScript function to reset checkboxes
+        await JSRuntime.InvokeAsync<object>("resetCheckboxes", null);
+
+        // Notify parent component of cleared filters
+        await OnFilterByGenres.InvokeAsync(selectedGenres);
+        await OnFilterByLanguages.InvokeAsync(selectedLanguages);
+    }
+}

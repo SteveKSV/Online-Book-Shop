@@ -4,50 +4,62 @@
 @attribute [Authorize]
 
 
-<h1>Books</h1>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 scrollable-panel">
+            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre" OnFilterByLanguages="FilterBooksByLanguage" Genres="Genres" Languages="Languages"></FilterAndSort>
+        </div>
+        <div class="col-md-9">
+            <h1>Books</h1>
 
-<SearchBar Items="books" OnSearch="UpdateFilteredBooks"></SearchBar>
+            <SearchBar Items="books" OnSearch="UpdateFilteredBooksSearchBar"></SearchBar>
 
+            <div class="row">
+                @if (books.Any())
+                {
+                    @if (_filteredBooks.Any())
+                    {
+                        @foreach (var book in _filteredBooks)
+                        {
+                            <div class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4">
+                                <div class="card shadow-sm rounded">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><b>@book.Title</b></h5>
+                                        <p class="card-subtitle mb-2 text-muted text-md-center">@book.AuthorName</p>
+                                    </div>
+                                    <div class="mb-2 text-center">
+                                        <a href="/reviews" class="text-decoration-none align-bottom">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-square-text me-1" viewBox="0 0 16 16">
+                                                <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h11A1.5 1.5 0 0 1 14 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-8l-3 2V1.5z" />
+                                                <path d="M4 5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-1 2a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
+                                            </svg>
+                                            Reviews
+                                        </a>
+                                    </div>
+                                    <div class="card-footer text-muted d-flex justify-content-between flex-column flex-sm-row flex-xs-column">
+                                        <div class="mb-md-0 text-center text-md-left">
+                                            <span>@($"${book.Price}")</span>
+                                        </div>
 
-<div class="row">
-    @if (books.Any())
-    {
-        @foreach (var book in _filteredBooks)
-        {
-            <div class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4">
-                <div class="card shadow-sm rounded">
-                    <div class="card-body">
-                        <h5 class="card-title"><b>@book.Title</b></h5>
-                        <p class="card-subtitle mb-2 text-muted text-md-center">@book.AuthorName</p>
-                    </div>
-                    <div class="mb-2 text-md-center">
-                        <a href="/reviews" class="text-decoration-none align-bottom">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-square-text me-1" viewBox="0 0 16 16">
-                                <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h11A1.5 1.5 0 0 1 14 1.5v11a1.5 1.5 0 0 1-1.5 1.5h-8l-3 2V1.5z" />
-                                <path d="M4 5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-1 2a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm-2-1a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
-                            </svg>
-                            Reviews
-                        </a>
-                    </div>
-                    
-                    <div class="card-footer text-muted d-flex justify-content-between">
-                        <div class="text-capitalize">@book.Genre</div>
-                        <div>
-                            <span>@($"${book.Price}")</span>
-                            <a href="/buy" class="btn btn-primary btn-sm ms-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 me-1" viewBox="0 0 16 16">
-                                    <path d="M1 0.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .485.379l.825 3.3 1.871 7.484a.5.5 0 0 0 .485.384h6.086a.5.5 0 0 0 .485-.384l1.87-7.484.826-3.3a.5.5 0 0 1 .485-.38h1a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 14.5 12H4.95a.5.5 0 0 1-.477-.342l-2-8a.5.5 0 0 1 .477-.658h1.01a.5.5 0 0 1 .485.38l.247 1.004h7.527l-.51-2.04H3.165L2.655 1.5h10.032l.247 1.004h1.01a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 12.5 12H3.001a.5.5 0 0 1-.477-.342l-2-8A.5.5 0 0 1 1 3.5h.182L1 0.5zM14.5 13a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
-                                </svg>
-                                Buy
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                                        <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row ">
+                                            <a href="/buy" class="btn btn-primary btn-sm ms-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 me-1" viewBox="0 0 16 16">
+                                                    <path d="M1 0.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .485.379l.825 3.3 1.871 7.484a.5.5 0 0 0 .485.384h6.086a.5.5 0 0 0 .485-.384l1.87-7.484.826-3.3a.5.5 0 0 1 .485-.38h1a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 14.5 12H4.95a.5.5 0 0 1-.477-.342l-2-8a.5.5 0 0 1 .477-.658h1.01a.5.5 0 0 1 .485.38l.247 1.004h7.527l-.51-2.04H3.165L2.655 1.5h10.032l.247 1.004h1.01a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 12.5 12H3.001a.5.5 0 0 1-.477-.342l-2-8A.5.5 0 0 1 1 3.5h.182L1 0.5zM14.5 13a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
+                                                </svg>
+                                                Buy
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p>No books available</p>
+                    }
+                }    
             </div>
-        }
-    }
-    else
-    {
-        <p>No books available</p>
-    }
+        </div>
+    </div>
 </div>

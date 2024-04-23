@@ -1,0 +1,47 @@
+﻿.form-check-input
+{
+    font-size: 14px;
+}
+
+h7 {
+    font-weight: bold;
+}
+
+.scrollable-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+    position: fixed;
+    top: 50px;
+    right: 0;
+    width: 20%;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .scrollable-panel {
+        position: static;
+        width: 80%;
+        margin: 20px auto;
+        overflow-y: auto;
+        background-color: #fff;
+        padding-top: 12px;
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+    }
+}
+
+
+@media (min-width: 724px) {
+    .scrollable-panel {
+        position: fixed;
+        top: 50px;
+        right: 0;
+        width: 20%; 
+        max-height: 80vh;
+        overflow-y: auto;
+        background-color: #fff;
+        padding: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+}
