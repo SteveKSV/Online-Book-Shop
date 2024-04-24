@@ -35,5 +35,8 @@ namespace Catalog.Entities
 
         [BsonElement("AuthorName")]
         public string AuthorName { get; set; }
+
+        [BsonElement("Image")]
+        public string Image { get; set; }
     }
 }

@@ -1,22 +1,36 @@
 ﻿@page "/bookdetails/{bookTitle}"
 
-<h1>Book Details</h1>
+<button @onclick="GoBack">Go Back</button>
 
 @if (Book != null)
 {
-    <div>
-        <h2>@Book.Title</h2>
-        <p>Author: @Book.AuthorName</p>
-        <p>Description: @Book.Description</p>
-        <!-- Додайте інші поля, які ви хочете відобразити -->
-    </div>
+    <h1>@Book.Title</h1>
+    <article>
+        <div class="book-cover">
+            
+            <img src="@Book.Image" alt="Book Image Here" />
+        </div>
+        <section>
+            <p>Author: @Book.AuthorName</p>
+            <p>Genre: @Book.Genre</p>
+            <p>Description: @Book.Description</p>
+
+            <p>Price: @Book.Price</p>
+            <p>Publisher: @Book.PublisherName</p>
+            <p>Publication Date: @Book.PublicationDate</p>
+            <p>Pages: @Book.NumberOfPages</p>
+            <button id="sendToBasket">Buy</button>
+
+            <div class="reviews">
+                <p>There are no reviews now.</p>
+            </div>
+        </section>
+    </article>
 }
 else
 {
     <p>Book not found</p>
 }
-
-<button @onclick="GoBack">Go Back</button>
 
 @code {
    

@@ -1,6 +1,15 @@
 ﻿.card {
     transition: transform 0.3s;
-    height: 220px;
+    
+    height: 100%;
+}
+
+.card-body {
+    flex-grow: 1;
+}
+
+.card-footer {
+    flex-shrink: 0; 
 }
 .card-anchor {
     text-decoration: none !important;
@@ -41,11 +50,8 @@ h1, h5, .card-body {
     .card-footer {
         align-items: center;
     }
-    .card {
-        height: 290px;
-    }
 }
-/* Для екранів шириною менше 768px */
+
 @media (max-width: 768px) {
 
     .card-footer .flex-md-row {
@@ -62,7 +68,6 @@ h1, h5, .card-body {
     }
 }
 
-/* Для екранів шириною від 768px до 992px */
 @media (min-width: 768px) and (max-width: 992px) {
     .card-footer .flex-md-row {
         justify-content: center;

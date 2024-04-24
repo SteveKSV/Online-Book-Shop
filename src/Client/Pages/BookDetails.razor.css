@@ -1,1 +1,37 @@
-﻿
+﻿article {
+    display: flex;
+    flex-direction: row;
+}
+
+section {
+    margin-left: 10px;
+}
+.book-cover img {
+   max-width: 800px;
+   max-height: 800px;
+}
+
+@media (max-width: 1110px){
+    article {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    section {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+}
+@media (max-width: 767px){
+    .book-cover img {
+        max-width: 600px;
+        max-height: 600px;
+    }
+}
+
+@media (max-width: 440px){
+    .book-cover img {
+        max-width: 500px;
+        max-height: 500px;
+    }
+}

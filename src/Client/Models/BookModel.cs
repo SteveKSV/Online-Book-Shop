@@ -9,5 +9,6 @@
         string LanguageName,
         string PublisherName,
         DateTime PublicationDate,
-        string AuthorName);
+        string AuthorName,
+        string Image);
 }
