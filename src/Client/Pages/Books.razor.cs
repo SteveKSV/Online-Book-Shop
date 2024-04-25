@@ -2,6 +2,7 @@
 using Client.Services;
 using IdentityModel.Client;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Http;
 
 namespace Client.Pages
 {
@@ -9,35 +10,61 @@ namespace Client.Pages
     {
         private List<BookModel> books = new();
         private List<BookModel> _filteredBooks = new();
-        private List<string> Genres { get; set; } = new List<string>();
-        private List<string> Languages { get; set; } = new List<string>();
+        private int TotalBooksCount { get; set; }
         [Inject] private HttpClient HttpClient { get; set; }
         [Inject] private IConfiguration Config { get; set; }
-        [Inject] private ITokenService TokenService { get; set; }
+        //[Inject] private ITokenService TokenService { get; set; }
 
-        protected override async Task OnInitializedAsync()
+        protected override async Task OnParametersSetAsync()
         {
-            var tokenResponse = await TokenService.GetToken("Catalog.read");
-
-            StateHasChanged();
-
-            HttpClient.SetBearerToken(tokenResponse.AccessToken);
-
-            var result = await HttpClient.GetAsync(Config["apiUrl"] + "/catalog");
-
-            StateHasChanged();
-
-            if (result.IsSuccessStatusCode)
-            {
-                books = await result.Content.ReadFromJsonAsync<List<BookModel>>();
-                _filteredBooks = books.ToList();
-                Genres = books.SelectMany(book => book.Genre.Split(',')).Distinct().ToList();
-                Languages = books.SelectMany(book => book.LanguageName.Split(',')).Distinct().ToList();
-            }
-
-            StateHasChanged();
+            await LoadBooks();
+            await GetTotalBooksCount();
         }
 
+        private int CalculateTotalPages()
+        {
+            int pageSize = 3;
+            int totalPages = (int)Math.Ceiling((double)TotalBooksCount / pageSize);
+            return totalPages;
+        }
+        protected async Task GetTotalBooksCount()
+        {
+            try
+            {
+                var apiUrl = Config["apiUrl"];
+                var result = await HttpClient.GetAsync($"{apiUrl}/catalog/GetBooksCount");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    TotalBooksCount = await result.Content.ReadFromJsonAsync<int>();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions, log or show error message
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+        protected async Task LoadBooks(string queryString = null)
+        {
+            try
+            {
+                var apiUrl = Config["apiUrl"];
+                var result = await HttpClient.GetAsync($"{apiUrl}/catalog{queryString}");
+
+                if (result.IsSuccessStatusCode)
+                {
+                    books = await result.Content.ReadFromJsonAsync<List<BookModel>>();
+                    _filteredBooks = books.ToList();
+                    StateHasChanged(); 
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions, log or show error message
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
         private void UpdateFilteredBooksSearchBar(string searchTerm)
         {
 

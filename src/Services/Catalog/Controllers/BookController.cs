@@ -8,7 +8,6 @@ namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;
@@ -18,11 +17,21 @@ namespace Catalog.Controllers
             _manager = manager ?? throw new ArgumentNullException(nameof(manager));
         }
 
+        [Route("GetBooksCount")]
+        [HttpGet]
+        [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<int>> GetBooksCount()
+        {
+            var totalPagesNumber = await _manager.GetBooksCount();
+            return Ok(totalPagesNumber);
+        }
+
+
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(string? title = null, string? author = null, string? publisher = null)
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks([FromQuery] PaginationParams? paginationParams = null, string? title = null, string? author = null, string? publisher = null)
         {
-            var products = await _manager.GetBooks(title, author, publisher);
+            var products = await _manager.GetBooks(paginationParams, title, author, publisher);
             return Ok(products);
         }
 

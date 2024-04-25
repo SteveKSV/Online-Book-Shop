@@ -11,7 +11,8 @@ builder.Services.AddTransient<MongoDbContext>();
 
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
 builder.Services.AddScoped<IBookManager, BookManager>();
-
+builder.Services.AddScoped<IGenreManager, GenreManager>();
+builder.Services.AddScoped<ILanguageManager, LanguageManager>();
 //////////////////////// CONTROLLERS CONFIGURATION ///////////////////////////////
 builder.Services.AddControllers();
 

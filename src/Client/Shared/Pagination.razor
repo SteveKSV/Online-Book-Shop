@@ -1,0 +1,21 @@
+﻿<div>
+    <button type="button" class="btn-lg btn" id="prev" @onclick="PrevPage" disabled="@(!CanGoPreviousPage)">Previous</button>
+    
+    @for (int i = 1; i <= TotalPages; i++)
+    {
+        int j = i;
+        @if (i > 0)
+        {
+            if (i == CurPage)
+            {
+                <span class="px-2" style="font-weight:bold; cursor: pointer" @onclick="() => ShowPage(j)">@i</span>
+            }
+            else
+            {
+                <span class="px-2" style="cursor:pointer" @onclick="() => ShowPage(j)">@i</span>
+            }
+        }
+    }
+
+    <button type="button" class="btn-lg btn" id="next" @onclick="NextPage" disabled="@(!CanGoNextPage)">Next</button>
+</div>

@@ -76,6 +76,43 @@
       "UpstreamPathTemplate": "/catalog/GetBooksByGenre/{genre}",
       "UpstreamHttpMethod": [ "GET" ]
     },
+    {
+      "DownstreamPathTemplate": "/api/book/GetBooksCount",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBooksCount",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/genre/",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/genre",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Language",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/language",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+
 
     // Basket.API
     {
@@ -114,7 +151,7 @@
         }
       ],
       "UpstreamPathTemplate": "/order/",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT"]
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ]
     },
     {
       "DownstreamPathTemplate": "/api/Order/{id}",

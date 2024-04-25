@@ -7,14 +7,14 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12 scrollable-panel">
-            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre" OnFilterByLanguages="FilterBooksByLanguage" Genres="Genres" Languages="Languages"></FilterAndSort>
+            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre" OnFilterByLanguages="FilterBooksByLanguage"></FilterAndSort>
         </div>
         <div class="col-md-9">
             <h1>Books</h1>
 
             <SearchBar Items="books" OnSearch="UpdateFilteredBooksSearchBar"></SearchBar>
-
             <div class="row">
+                <Pagination Books="books" OnLoadBooks="LoadBooks" TotalPages="CalculateTotalPages()"></Pagination>
                 @if (books.Any())
                 {
                     @if (_filteredBooks.Any())

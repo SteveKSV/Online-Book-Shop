@@ -46,9 +46,9 @@ namespace Catalog.Managers
                           .ToListAsync();
         }
 
-        public async Task<IEnumerable<Book?>> GetBooks(string? title, string? author, string? publisher)
+        public async Task<IEnumerable<Book?>> GetBooks(PaginationParams? paginationParams, string? title, string? author, string? publisher)
         {
-            IEnumerable<Book?> books = await _collection.Find(new BsonDocument()).ToListAsync(); ;
+            IEnumerable<Book?> books = await _collection.Find(new BsonDocument()).ToListAsync();
 
             if (!string.IsNullOrEmpty(title))
             {
@@ -65,7 +65,22 @@ namespace Catalog.Managers
                 books = books.Where(prop => prop!.PublisherName == publisher);
             }
 
-            return books;
+            if (paginationParams != null)
+            {
+                books = books.OrderBy(on => on!.Title)
+                             .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                             .Take(paginationParams.PageSize);
+            }
+
+            return books.ToList();
+        }
+
+        public async Task<int> GetBooksCount()
+        {
+            IEnumerable<Book?> books = await _collection.Find(new BsonDocument()).ToListAsync();
+            var totalPages = books.Count();
+
+            return totalPages;
         }
     }
 }

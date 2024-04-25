@@ -65,17 +65,33 @@
     [Parameter]
     public EventCallback<List<string>> OnFilterByLanguages { get; set; }
 
-    // [Parameter]
-    // public List<TEntity> Items { get; set; }
-
-    [Parameter]
-    public List<string> Genres { get; set; }
-
-    [Parameter]
-    public List<string> Languages { get; set; }
+    public List<string> Genres { get; set; } = new List<string>();
+    public List<string> Languages { get; set; } = new List<string>();
 
     private List<string> selectedGenres = new();
     private List<string> selectedLanguages = new();
+
+    [Inject] private HttpClient HttpClient { get; set; }
+    [Inject] private IConfiguration Config { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiUrl = Config["apiUrl"];
+        var resultGenres = await HttpClient.GetAsync($"{apiUrl}/genre");
+        var resultLanguages = await HttpClient.GetAsync($"{apiUrl}/language");
+
+        if (resultGenres.IsSuccessStatusCode)
+        {
+            Genres = await resultGenres.Content.ReadFromJsonAsync<List<string>>();
+            StateHasChanged();
+        }
+
+        if (resultLanguages.IsSuccessStatusCode)
+        {
+            Languages = await resultLanguages.Content.ReadFromJsonAsync<List<string>>();
+            StateHasChanged();
+        }
+    }
 
     private async Task SortByPrice(string sortOrder)
     {
