@@ -16,7 +16,7 @@ namespace Catalog.Entities
         public string Description { get; set; }
 
         [BsonElement("Genre")]
-        public string Genre { get; set; }
+        public List<string> Genre { get; set; }
 
         [BsonElement("Price")]
         public decimal Price { get; set; }

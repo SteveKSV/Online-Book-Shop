@@ -1,4 +1,5 @@
 using Client.Services;
+using Client.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
@@ -14,7 +15,7 @@ builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSect
 
 //////////////////////// DI-SERVICES CONFIGURATION ///////////////////////////////
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddScoped<ICatalogService, CatalogService>();
 //////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
 builder.Services.AddAuthentication(options =>
 {

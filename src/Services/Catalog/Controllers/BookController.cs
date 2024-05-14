@@ -2,6 +2,7 @@
 using Catalog.Managers.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace Catalog.Controllers
@@ -17,21 +18,27 @@ namespace Catalog.Controllers
             _manager = manager ?? throw new ArgumentNullException(nameof(manager));
         }
 
-        [Route("GetBooksCount")]
-        [HttpGet]
-        [ProducesResponseType(typeof(int), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<int>> GetBooksCount()
-        {
-            var totalPagesNumber = await _manager.GetBooksCount();
-            return Ok(totalPagesNumber);
-        }
-
-
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks([FromQuery] PaginationParams? paginationParams = null, string? title = null, string? author = null, string? publisher = null)
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
+            [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
+            [FromQuery] List<string>? genres = null,
+            [FromQuery] List<string>? languages = null
+            )
         {
-            var products = await _manager.GetBooks(paginationParams, title, author, publisher);
+            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genres, languages);
+            var metadata = new
+            {
+                products.TotalCount,
+                products.PageSize,
+                products.CurrentPage,
+                products.TotalPages,
+                products.HasNext,
+                products.HasPrevious
+            };
+            
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+            
             return Ok(products);
         }
 
@@ -80,7 +87,7 @@ namespace Catalog.Controllers
             var books = await _manager.GetBooksByGenre(genre);
             return Ok(books);
         }
-
+        
         [HttpPost]
         [ProducesResponseType(typeof(Book), (int)HttpStatusCode.Created)]
         public async Task<ActionResult<Book>> CreateBook([FromBody] Book book)
@@ -107,6 +114,7 @@ namespace Catalog.Controllers
         {
             return Ok(await _manager.DeleteEntity(id));
         }
+       
         private string GenerateRandomHexadecimalId()
         {
             // Generate a random 24-digit hexadecimal string

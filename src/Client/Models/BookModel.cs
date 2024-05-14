@@ -3,7 +3,7 @@
     public record class BookModel(string Id,
         string Title,
         string Description,
-        string Genre,
+        List<string> Genre,
         decimal Price,
         int NumberOfPages,
         string LanguageName,

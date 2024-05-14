@@ -1,5 +1,4 @@
-﻿
-@using Microsoft.JSInterop
+﻿@using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 
 <div>
@@ -7,7 +6,13 @@
             <div>
                 <h7>Sort by Price:</h7>
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" checked @onclick='() => SortByPrice("asc")'>
+                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none" checked @onclick='() => SortByPrice("none")'>
+                    <label class="form-check-label" for="sortPriceDefault">
+                        Default
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" @onclick='() => SortByPrice("asc")'>
                     <label class="form-check-label" for="sortPriceAsc">
                         Low to High
                     </label>
@@ -60,10 +65,10 @@
     public EventCallback<string> OnSort { get; set; }
 
     [Parameter]
-    public EventCallback<List<string>> OnFilterByGenres { get; set; }
+    public EventCallback<string?> OnFilterByGenres { get; set; }
 
     [Parameter]
-    public EventCallback<List<string>> OnFilterByLanguages { get; set; }
+    public EventCallback<string?> OnFilterByLanguages { get; set; }
 
     public List<string> Genres { get; set; } = new List<string>();
     public List<string> Languages { get; set; } = new List<string>();
@@ -112,8 +117,15 @@
             selectedGenres.Remove(selectedGenre);
         }
 
+        string? queryString = null;
+
+        if (selectedGenres.Any())
+        {
+            queryString += "&" + string.Join("&", selectedGenres.Select(g => $"genres={g}"));
+        }
+
         // Invoke the event to notify the parent component of the selected genres
-        await OnFilterByGenres.InvokeAsync(selectedGenres);
+        await OnFilterByGenres.InvokeAsync(queryString);
     }
 
     private async Task UpdateFilteredBooksByLanguage(string selectedLanguage, ChangeEventArgs e)
@@ -130,8 +142,13 @@
             selectedLanguages.Remove(selectedLanguage);
         }
 
-        // Invoke the event to notify the parent component of the selected genres
-        await OnFilterByLanguages.InvokeAsync(selectedLanguages);
+        string? queryString = null;
+
+        if (selectedLanguages.Any())
+        {
+            queryString += "&" + string.Join("&", selectedLanguages.Select(l => $"languages={l}"));
+        }
+        await OnFilterByLanguages.InvokeAsync(queryString);
     }
 
     private async Task ClearFilters()
@@ -144,7 +161,7 @@
         await JSRuntime.InvokeAsync<object>("resetCheckboxes", null);
 
         // Notify parent component of cleared filters
-        await OnFilterByGenres.InvokeAsync(selectedGenres);
-        await OnFilterByLanguages.InvokeAsync(selectedLanguages);
+        await OnFilterByGenres.InvokeAsync(null);
+        await OnFilterByLanguages.InvokeAsync(null);
     }
 }

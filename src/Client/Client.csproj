@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="IdentityModel" Version="5.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.28" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>

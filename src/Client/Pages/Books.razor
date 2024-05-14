@@ -12,14 +12,21 @@
         <div class="col-md-9">
             <h1>Books</h1>
 
-            <SearchBar Items="books" OnSearch="UpdateFilteredBooksSearchBar"></SearchBar>
+           <div class="w-100" style="margin-bottom: 30px">
+                <label class="input-group">
+                    <span class="input-group-text" style="cursor: pointer;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                            <path d="M11.742 9.344a5.5 5.5 0 1 0-1.397 1.398l3.86 3.86a1 1 0 0 0 1.415-1.416l-3.86-3.86zm-.342-3.968a4 4 0 1 1-6.468-1.47A4 4 0 0 1 11.4 5.376z" />
+                        </svg>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="search-addon" @bind="searchTerm" @oninput="SearchBooks" tabindex="1" autofocus />
+                </label>
+            </div>
+
             <div class="row">
-                <Pagination Books="books" OnLoadBooks="LoadBooks" TotalPages="CalculateTotalPages()"></Pagination>
                 @if (books.Any())
                 {
-                    @if (_filteredBooks.Any())
-                    {
-                        @foreach (var book in _filteredBooks)
+                        @foreach (var book in books)
                         {
                             <a href="/bookdetails/@book.Title" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
                                 <div class="card shadow-sm rounded">
@@ -54,13 +61,45 @@
                                 </div>
                             </a>
                         }
-                    }
-                    else
-                    {
-                        <p>No books available</p>
-                    }
-                }    
+                }
+                else
+                {
+                  <p>No books available</p>
+                }
+                   
             </div>
+            @if (pagination != null)
+            {
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        @if (pagination.HasPrevious)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" @onclick="async () => await LoadBooks(pagination.CurrentPage - 1)" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        }
+
+                        @for (int i = 1; i <= pagination.TotalPages; i++)
+                        {
+                            var currentPage = i;
+                            <li class="page-item @(currentPage == pagination.CurrentPage ? "active" : "")">
+                                <a class="page-link" @onclick="async () => await LoadBooks(currentPage)" style="cursor: pointer;">@currentPage</a>
+                            </li>
+                        }
+
+                        @if (pagination.HasNext)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" @onclick="async () => await LoadBooks(pagination.CurrentPage + 1)" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
         </div>
     </div>
 </div>
