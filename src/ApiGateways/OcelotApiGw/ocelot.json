@@ -14,7 +14,11 @@
         }
       ],
       "UpstreamPathTemplate": "/catalog",
-      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ]
+      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "IdentityApiKey",
+        "AllowedScopes": [ "openid", "Catalog.read" ]
+      }
     },
     {
       "DownstreamPathTemplate": "/api/book/{id}",

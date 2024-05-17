@@ -9,15 +9,26 @@ namespace Client.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        public CatalogService(HttpClient httpClient, IConfiguration configuration)
+        private readonly ITokenService _tokenService;
+        public CatalogService(HttpClient httpClient, IConfiguration configuration, ITokenService tokenService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
+            _tokenService = tokenService;
         }
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
-            var response = await _httpClient.GetAsync($"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
+            // Отримання токену доступу
+            var token = await _tokenService.GetToken("Catalog.read");
 
+            // Створення HTTP запиту
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
+
+            // Встановлення заголовка авторизації з використанням токену
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+
+            // Виконання запиту
+            var response = await _httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
                 // Retrieve books from response body

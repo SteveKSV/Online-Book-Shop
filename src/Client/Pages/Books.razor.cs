@@ -16,14 +16,7 @@ namespace Client.Pages
         private PaginationMetadata pagination;
 
         [Inject] private ICatalogService Service { get; set; }
-        [Inject] private ITokenService TokenService { get; set; }
-        [Inject] private HttpClient HttpClient { get; set; }
-        protected override async Task OnInitializedAsync()
-        {
-            var tokenResponse = await TokenService.GetToken("Catalog.read");
-            HttpClient.SetBearerToken(tokenResponse.AccessToken);
-            StateHasChanged();
-        }
+
         protected override async Task OnParametersSetAsync()
         {
             await LoadBooks();

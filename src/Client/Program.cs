@@ -39,6 +39,14 @@ builder.Services.AddAuthentication(options =>
     }
 );
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ApiScope", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("scope", "Catalog.read");
+    });
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
