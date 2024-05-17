@@ -20,13 +20,9 @@ namespace Client.Pages
         {
             var tokenResponse = await TokenService.GetToken("Catalog.read");
 
-            StateHasChanged();
-
             HttpClient.SetBearerToken(tokenResponse.AccessToken);
 
             var result = await HttpClient.GetAsync(Config["apiUrl"] + $"/catalog/GetBookByTitle/{bookTitle}");
-
-            StateHasChanged();
 
             if (result.IsSuccessStatusCode)
             {

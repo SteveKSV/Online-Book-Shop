@@ -12,12 +12,27 @@
         </div>
         <section>
             <p>Author: @Book.AuthorName</p>
-            <p>Genre: @Book.Genre</p>
+            <p>Genre:
+                @foreach (var genre in Book.Genre)
+                {
+                    <span>@genre; </span>
+                }
+             </p>
+
             <p>Description: @Book.Description</p>
 
             <p>Price: @Book.Price</p>
             <p>Publisher: @Book.PublisherName</p>
-            <p>Publication Date: @Book.PublicationDate</p>
+            <p>Publication Date:
+                @Book.PublicationDate.Day.@if (@Book.PublicationDate.Month < 10)
+                {
+                    <span>0</span><span>@Book.PublicationDate.Month.</span>
+                }
+                else
+                {
+                    <span>@Book.PublicationDate.Month.</span>
+                }
+                @Book.PublicationDate.Year</p>
             <p>Pages: @Book.NumberOfPages</p>
             <button id="sendToBasket">Buy</button>
 

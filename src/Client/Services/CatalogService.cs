@@ -32,6 +32,22 @@ namespace Client.Services
             return (null, null);
         }
 
+        public async Task<List<string>> Get(string queryString = null)
+        {
+            var response = await _httpClient.GetAsync($"{_configuration.GetSection("apiUrl").Value}/{queryString}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Retrieve entities from response body
+                var entities = await response.Content.ReadFromJsonAsync<List<string>>();
+
+                return entities;
+            }
+
+            return null;
+        }
+
+
         private PaginationMetadata ParsePaginationMetadata(HttpResponseHeaders headers)
         {
             PaginationMetadata metadata = new PaginationMetadata();

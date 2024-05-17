@@ -82,21 +82,6 @@ namespace Catalog.Managers
                           .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorName)
-        {
-            return await _collection
-                          .Find(p => p.AuthorName == authorName)
-                          .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Book>> GetBooksByGenre(string genre)
-        {
-            //return await _collection
-            //              .Find(p => p.Genre.Select(c=> c == genre) )
-            //              .ToListAsync();
-            throw new NotImplementedException();
-        }
-
         public async Task<Book> GetBookById(string id)
         {
             return await _collection
@@ -104,19 +89,5 @@ namespace Catalog.Managers
                            .FirstOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<Book>> GetBooksByPublisher(string publisherName)
-        {
-            return await _collection
-                          .Find(p => p.PublisherName == publisherName)
-                          .ToListAsync();
-        }
-
-        public async Task<int> GetBooksCount()
-        {
-            IEnumerable<Book?> books = await _collection.Find(new BsonDocument()).ToListAsync();
-            var totalPages = books.Count();
-
-            return totalPages;
-        }
     }
 }

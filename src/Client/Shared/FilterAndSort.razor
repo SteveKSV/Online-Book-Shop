@@ -1,4 +1,5 @@
-﻿@using Microsoft.JSInterop
+﻿@using Client.Services.Interfaces
+@using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 
 <div>
@@ -76,26 +77,13 @@
     private List<string> selectedGenres = new();
     private List<string> selectedLanguages = new();
 
-    [Inject] private HttpClient HttpClient { get; set; }
-    [Inject] private IConfiguration Config { get; set; }
+    [Inject] private ICatalogService Service { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        var apiUrl = Config["apiUrl"];
-        var resultGenres = await HttpClient.GetAsync($"{apiUrl}/genre");
-        var resultLanguages = await HttpClient.GetAsync($"{apiUrl}/language");
-
-        if (resultGenres.IsSuccessStatusCode)
-        {
-            Genres = await resultGenres.Content.ReadFromJsonAsync<List<string>>();
-            StateHasChanged();
-        }
-
-        if (resultLanguages.IsSuccessStatusCode)
-        {
-            Languages = await resultLanguages.Content.ReadFromJsonAsync<List<string>>();
-            StateHasChanged();
-        }
+        Genres = await Service.Get("genre");
+        Languages = await Service.Get("language");
+        StateHasChanged();        
     }
 
     private async Task SortByPrice(string sortOrder)
@@ -107,7 +95,6 @@
     {
         bool isChecked = (bool)e.Value;
 
-        // Update the selectedGenres list
         if (isChecked && !selectedGenres.Contains(selectedGenre))
         {
             selectedGenres.Add(selectedGenre);
@@ -124,7 +111,6 @@
             queryString += "&" + string.Join("&", selectedGenres.Select(g => $"genres={g}"));
         }
 
-        // Invoke the event to notify the parent component of the selected genres
         await OnFilterByGenres.InvokeAsync(queryString);
     }
 
@@ -132,7 +118,6 @@
     {
         bool isChecked = (bool)e.Value;
 
-        // Update the selectedGenres list
         if (isChecked && !selectedLanguages.Contains(selectedLanguage))
         {
             selectedLanguages.Add(selectedLanguage);
@@ -153,14 +138,11 @@
 
     private async Task ClearFilters()
     {
-        // Clear selectedGenres list
         selectedGenres.Clear();
         selectedLanguages.Clear();
 
-        // Invoke JavaScript function to reset checkboxes
         await JSRuntime.InvokeAsync<object>("resetCheckboxes", null);
 
-        // Notify parent component of cleared filters
         await OnFilterByGenres.InvokeAsync(null);
         await OnFilterByLanguages.InvokeAsync(null);
     }

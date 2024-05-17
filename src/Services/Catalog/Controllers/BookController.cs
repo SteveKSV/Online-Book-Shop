@@ -9,6 +9,7 @@ namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;
@@ -62,30 +63,6 @@ namespace Catalog.Controllers
         {
             var book = await _manager.GetBookByTitle(title);
             return Ok(book);
-        }
-
-        [HttpGet("GetBooksByAuthor/{authorName}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByAuthor(string authorName)
-        {
-            var books = await _manager.GetBooksByAuthor(authorName);
-            return Ok(books);
-        }
-
-        [HttpGet("GetBooksByPublisher/{publisher}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByPublisher(string publisher)
-        {
-            var books = await _manager.GetBooksByPublisher(publisher);
-            return Ok(books);
-        }
-
-        [HttpGet("GetBooksByGenre/{genre}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByGenre(string genre)
-        {
-            var books = await _manager.GetBooksByGenre(genre);
-            return Ok(books);
         }
         
         [HttpPost]
