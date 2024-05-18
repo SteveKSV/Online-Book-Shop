@@ -1,0 +1,13 @@
+﻿@using Client.Models
+
+@page "/register"
+
+
+@code {
+
+    [Inject] private NavigationManager navigationManager { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        navigationManager.NavigateTo("https://localhost:5006/Account/Register");
+    }
+}
