@@ -18,14 +18,14 @@ namespace Client.Services
         }
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
-            // Отримання токену доступу
-            var token = await _tokenService.GetToken("Catalog.read");
+            //// Отримання токену доступу
+            //var token = await _tokenService.GetToken("Catalog.read");
 
             // Створення HTTP запиту
             var request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
 
-            // Встановлення заголовка авторизації з використанням токену
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+            //Встановлення заголовка авторизації з використанням токену
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
             // Виконання запиту
             var response = await _httpClient.SendAsync(request);

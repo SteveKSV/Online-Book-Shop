@@ -1,0 +1,76 @@
+﻿@page "/cart"
+@using Client.Models
+@using Client.Services.Interfaces
+
+<h1>Shopping Cart</h1>
+
+@if (Basket.Items.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Change Quantity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Basket.Items)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price</td>
+                    <td>@(item.Price * item.Quantity)</td>
+                     <td>
+                        <input type="number" min="1" value="@item.Quantity" @onchange="async e => await UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))" class="form-control" style="width: 70px;" />
+                    </td>
+                    <td><button class="btn btn-danger" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>Total Price: @Basket.TotalPrice</div>
+    <button class="btn btn-primary" @onclick="Checkout">Checkout</button>
+}
+else
+{
+    <p>Your shopping cart is empty.</p>
+}
+
+@code {
+    public ShoppingCart Basket { get; set; } = new ShoppingCart();
+    [Inject] public IShoppingCartService Service { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBasket();
+
+        StateHasChanged();
+    }
+
+    protected async Task LoadBasket()
+    {
+        Basket = await Service.GetCart();
+
+    }
+    private async Task UpdateQuantity(string productId, int newQuantity)
+    {
+        Basket = await Service.UpdateItemQuantity(productId, newQuantity);
+        await LoadBasket();
+    }
+    private async Task RemoveFromCart(string productId)
+    {
+        Basket = await Service.RemoveFromCart(productId);
+        await LoadBasket();
+        StateHasChanged();
+    }
+
+    private async Task Checkout()
+    {
+        // Implement checkout logic
+    }
+}

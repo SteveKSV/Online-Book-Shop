@@ -9,7 +9,7 @@ namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;

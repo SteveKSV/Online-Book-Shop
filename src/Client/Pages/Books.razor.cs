@@ -16,7 +16,7 @@ namespace Client.Pages
         private PaginationMetadata pagination;
 
         [Inject] private ICatalogService Service { get; set; }
-
+        [Inject] private IShoppingCartService CartService { get; set; }
         protected override async Task OnParametersSetAsync()
         {
             await LoadBooks();
@@ -74,6 +74,20 @@ namespace Client.Pages
             }
 
             await LoadBooks();
+        }
+
+        private async Task AddToCart(BookModel book)
+        {
+            var item = new ShoppingCartItem
+            {
+                ProductId = book.Id,
+                ProductName = book.Title,
+                Price = book.Price,
+                Quantity = 1
+            };
+
+            await CartService.AddToCart(item);
+            StateHasChanged();
         }
     }
 }

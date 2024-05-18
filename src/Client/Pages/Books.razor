@@ -1,7 +1,7 @@
 ﻿@page "/catalog"
 @using Client.Shared
 
-@attribute [Authorize]
+@* @attribute [Authorize] *@
 
 
 <div class="container">
@@ -50,12 +50,15 @@
                                         </div>
 
                                         <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row ">
-                                            <a href="/buy" class="btn btn-primary btn-sm ms-2">
+                                        <form @onclick:preventDefault @onsubmit:stopPropagation>
+                                            <button type="button" class="btn btn-primary btn-sm ms-2" @onclick="() => AddToCart(book)">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 me-1" viewBox="0 0 16 16">
                                                     <path d="M1 0.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .485.379l.825 3.3 1.871 7.484a.5.5 0 0 0 .485.384h6.086a.5.5 0 0 0 .485-.384l1.87-7.484.826-3.3a.5.5 0 0 1 .485-.38h1a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 14.5 12H4.95a.5.5 0 0 1-.477-.342l-2-8a.5.5 0 0 1 .477-.658h1.01a.5.5 0 0 1 .485.38l.247 1.004h7.527l-.51-2.04H3.165L2.655 1.5h10.032l.247 1.004h1.01a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 12.5 12H3.001a.5.5 0 0 1-.477-.342l-2-8A.5.5 0 0 1 1 3.5h.182L1 0.5zM14.5 13a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
                                                 </svg>
                                                 Buy
-                                            </a>
+                                            </button>
+                                        </form>
+                                        
                                         </div>
                                     </div>
                                 </div>

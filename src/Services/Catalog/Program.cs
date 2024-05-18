@@ -18,12 +18,12 @@ builder.Services.AddScoped<ILanguageManager, LanguageManager>();
 builder.Services.AddControllers();
 
 //////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
-builder.Services.AddAuthentication("Bearer")
-          .AddIdentityServerAuthentication("Bearer", options =>
-          {
-              options.Authority = "https://localhost:5006";
-              options.ApiName = "Catalog";
-          });
+//builder.Services.AddAuthentication("Bearer")
+//          .AddIdentityServerAuthentication("Bearer", options =>
+//          {
+//              options.Authority = "https://localhost:5006";
+//              options.ApiName = "Catalog";
+//          });
 
 builder.Services.AddAuthorization(options =>
 {

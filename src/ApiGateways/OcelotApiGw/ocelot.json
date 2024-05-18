@@ -15,10 +15,10 @@
       ],
       "UpstreamPathTemplate": "/catalog",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "IdentityApiKey",
-        "AllowedScopes": [ "openid", "Catalog.read" ]
-      }
+      //"AuthenticationOptions": {
+      //  "AuthenticationProviderKey": "IdentityApiKey",
+      //  "AllowedScopes": [ "openid", "Catalog.read" ]
+      //}
     },
     {
       "DownstreamPathTemplate": "/api/book/{id}",
@@ -143,7 +143,42 @@
       "UpstreamPathTemplate": "/basket/",
       "UpstreamHttpMethod": [ "POST" ]
     },
-
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}",
+      "UpstreamHttpMethod": [ "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}/quantity/{quantity}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}/quantity/{quantity}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/Checkout",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/checkout",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
     // Order.API
     {
       "DownstreamPathTemplate": "/api/Order/",
