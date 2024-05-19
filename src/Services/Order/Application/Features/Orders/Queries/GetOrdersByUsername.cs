@@ -1,9 +1,10 @@
-﻿using Domain.Entities;
+﻿using Application.Dtos;
+using Domain.Entities;
 using MediatR;
 
 namespace Application.Features.Orders.Queries
 {
-    public class GetOrdersByUsername : IRequest<List<Order>>
+    public class GetOrdersByUsername : IRequest<List<OrderDto>>
     {
         public string UserName { get; set; }
 

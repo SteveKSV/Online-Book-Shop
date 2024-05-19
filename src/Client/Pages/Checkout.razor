@@ -1,0 +1,162 @@
+﻿@* @page "/checkout"
+@using Client.Models
+@using Client.Services.Interfaces
+@inject NavigationManager Navigation
+
+<h1>Checkout</h1>
+
+@if (Basket.Items.Any())
+{
+    <h2>Shopping Cart Summary</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Basket.Items)
+            {
+                <tr>
+                    <td>@item.ProductName</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price</td>
+                    <td>@(item.Price * item.Quantity)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>Total Price: @Basket.TotalPrice</div>
+
+    <EditForm Model="Delivery" OnValidSubmit="PlaceOrder">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <h2>Delivery Information</h2>
+        <div>
+            <label for="firstName">First Name:</label>
+            <InputText id="firstName" @bind-Value="Delivery.FirstName" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.FirstName)" />
+        </div>
+        <div>
+            <label for="lastName">Last Name:</label>
+            <InputText id="lastName" @bind-Value="Delivery.LastName" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.LastName)" />
+        </div>
+        <div>
+            <label for="email">Email Address:</label>
+            <InputText id="email" @bind-Value="Delivery.EmailAddress" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.EmailAddress)" />
+        </div>
+        <div>
+            <label for="addressLine">Address Line:</label>
+            <InputText id="addressLine" @bind-Value="Delivery.AddressLine" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.AddressLine)" />
+        </div>
+        <div>
+            <label for="country">Country:</label>
+            <InputText id="country" @bind-Value="Delivery.Country" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.Country)" />
+        </div>
+        <div>
+            <label for="state">State:</label>
+            <InputText id="state" @bind-Value="Delivery.State" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.State)" />
+        </div>
+        <div>
+            <label for="zipCode">Zip Code:</label>
+            <InputText id="zipCode" @bind-Value="Delivery.ZipCode" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.ZipCode)" />
+        </div>
+
+        <h2>Payment Information</h2>
+        <div>
+            <label for="cardName">Card Name:</label>
+            <InputText id="cardName" @bind-Value="Delivery.CardName" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.CardName)" />
+        </div>
+        <div>
+            <label for="cardNumber">Card Number:</label>
+            <InputText id="cardNumber" @bind-Value="Delivery.CardNumber" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.CardNumber)" />
+        </div>
+        <div>
+            <label for="expiration">Expiration:</label>
+            <InputText id="expiration" @bind-Value="Delivery.Expiration" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.Expiration)" />
+        </div>
+        <div>
+            <label for="cvv">CVV:</label>
+            <InputText id="cvv" @bind-Value="Delivery.CVV" class="form-control" />
+            <ValidationMessage For="@(() => Delivery.CVV)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Place Order</button>
+    </EditForm>
+}
+else
+{
+    <p>Your shopping cart is empty.</p>
+}
+
+@code {
+    public ShoppingCart Basket { get; set; } = new ShoppingCart();
+    public DeliveryInfo Delivery { get; set; } = new DeliveryInfo();
+    [Inject] public IShoppingCartService Service { get; set; }
+    [Inject] public IOrderService OrderService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBasket();
+    }
+
+    protected async Task LoadBasket()
+    {
+        Basket = await Service.GetCart();
+    }
+
+    private async Task PlaceOrder()
+    {
+        // Construct order object with basket items and delivery information
+        var order = new Order
+            {
+                UserName = Basket.UserName,
+                TotalPrice = Basket.TotalPrice,
+                FirstName = Delivery.FirstName,
+                LastName = Delivery.LastName,
+                EmailAddress = Delivery.EmailAddress,
+                AddressLine = Delivery.AddressLine,
+                Country = Delivery.Country,
+                State = Delivery.State,
+                ZipCode = Delivery.ZipCode,
+                CardName = Delivery.CardName,
+                CardNumber = Delivery.CardNumber,
+                Expiration = Delivery.Expiration,
+                CVV = Delivery.CVV,
+                PaymentMethod = Delivery.PaymentMethod,
+                Items = Basket.Items.Select(item => new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                }).ToList()
+            };
+
+        // Send the order to the Order.API
+        var result = await OrderService.PlaceOrder(order);
+
+        // Handle the result as needed
+        if (result != null)
+        {
+            // Order placed successfully, maybe redirect to a confirmation page
+            Navigation.NavigateTo("/order-confirmation");
+        }
+        else
+        {
+            // Order placement failed, display an error message
+        }
+    }
+} *@

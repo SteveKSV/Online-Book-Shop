@@ -1,9 +1,8 @@
-﻿using Domain.Common;
-
-namespace Domain.Entities
+﻿namespace Application.Dtos
 {
-    public class Order : EntityBase
+    public class UpdateOrderDto
     {
+        public Guid Id { get; set; }
         public string UserName { get; set; }
         public decimal TotalPrice { get; set; }
         public int Quantity { get; set; }
@@ -24,6 +23,6 @@ namespace Domain.Entities
         public string CVV { get; set; }
         public int PaymentMethod { get; set; }
 
-        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public ICollection<OrderItemDto> Items { get; set; }
     }
 }

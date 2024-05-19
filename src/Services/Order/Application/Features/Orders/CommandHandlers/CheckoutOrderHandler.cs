@@ -1,4 +1,5 @@
-﻿using Application.Features.Orders.Commands;
+﻿using Application.Dtos;
+using Application.Features.Orders.Commands;
 using Application.Interfaces;
 using AutoMapper;
 using Domain.Entities;
@@ -6,25 +7,26 @@ using MediatR;
 
 namespace Application.Features.Orders.CommandHandlers
 {
-    public class CheckoutOrderHandler : IRequestHandler<CheckoutOrder, Order>
+    public class CheckoutOrderHandler : IRequestHandler<CheckoutOrder, OrderDto>
     {
         private readonly IOrderRepository _repository;
         private readonly IMapper _mapper;
+
         public CheckoutOrderHandler(IOrderRepository repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
         }
 
-        public async Task<Order> Handle (CheckoutOrder request, CancellationToken cancellationToken)
+        public async Task<OrderDto> Handle(CheckoutOrder request, CancellationToken cancellationToken)
         {
-            Order order = _mapper.Map<Order>(request);
+            var order = _mapper.Map<Order>(request.OrderDto);
 
             var createdOrder = await _repository.CheckoutOrder(order);
-
-            if (createdOrder != null)
+            var orderDto = _mapper.Map<OrderDto>(createdOrder);
+            if (orderDto != null)
             {
-                return createdOrder;
+                return orderDto;
             }
             else
             {
