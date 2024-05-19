@@ -1,4 +1,4 @@
-﻿namespace Client.Models
+﻿namespace EventBusMessages.Common
 {
     public class Order
     {

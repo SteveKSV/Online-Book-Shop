@@ -36,12 +36,12 @@ namespace Client.Services
         {
             var anonymousCartId = _navigationManager.Uri.Contains("localhost")
                 ? "anonymous_localhost"
-                : Guid.NewGuid().ToString(); // Replace this with an actual unique ID generator if necessary
+                : Guid.NewGuid().ToString(); 
 
             if (anonymousCartId == null)
             {
                 anonymousCartId = Guid.NewGuid().ToString();
-                _navigationManager.NavigateTo("/", true); // Store the ID in a cookie or local storage
+                _navigationManager.NavigateTo("/", true);
             }
 
             return anonymousCartId;

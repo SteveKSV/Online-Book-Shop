@@ -6,7 +6,6 @@ namespace Client.Models
     {
         public string UserName { get; set; }
         public decimal TotalPrice { get; set; }
-        public int Quantity { get; set; }
 
         // BillingAddress
         [Required(ErrorMessage = "First Name is required")]
@@ -33,14 +32,13 @@ namespace Client.Models
 
         // Payment
         [Required(ErrorMessage = "Card Name is required")]
-        [RegularExpression(@"^\d{16}$", ErrorMessage = "Invalid Card Number")]
         public string CardName { get; set; }
 
         [Required(ErrorMessage = "Card Number is required")]
         [CreditCard(ErrorMessage = "Invalid Card Number")]
         public string CardNumber { get; set; }
 
-        [RegularExpression(@"^(0[1-9]|1[0-2])\/?([0-9]{4}|[0-9]{2})$", ErrorMessage = "Invalid Expiration Date (MM/YY or MM/YYYY)")]
+        [RegularExpression(@"^(0[1-9]|1[0-2])\/?(?:[0-9]{2})$", ErrorMessage = "Invalid Expiration Date (MM/YY)")]
         [Required(ErrorMessage = "Expiration Date is required")]
         public string Expiration { get; set; }
 

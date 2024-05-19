@@ -21,10 +21,47 @@ namespace Order
 
         public async Task Consume(ConsumeContext<BasketCheckoutEvent> context)
         {
-            var command = _mapper.Map<CheckoutOrder>(context.Message);
-            var result = await _mediator.Send(command);
+            try
+            {
+                //var command = _mapper.Map<CheckoutOrder>(context.Message);
+                var basketCheckoutEvent = context.Message;
+                var command = new CheckoutOrder
+                {
+                    OrderDto = new Application.Dtos.AddOrderDto
+                    {
+                        UserName = basketCheckoutEvent.OrderDto.UserName,
+                        TotalPrice = basketCheckoutEvent.OrderDto.TotalPrice,
+                        Quantity = basketCheckoutEvent.OrderDto.Quantity,
+                        FirstName = basketCheckoutEvent.OrderDto.FirstName,
+                        LastName = basketCheckoutEvent.OrderDto.LastName,
+                        EmailAddress = basketCheckoutEvent.OrderDto.EmailAddress,
+                        AddressLine = basketCheckoutEvent.OrderDto.AddressLine,
+                        Country = basketCheckoutEvent.OrderDto.Country,
+                        State = basketCheckoutEvent.OrderDto.State,
+                        ZipCode = basketCheckoutEvent.OrderDto.ZipCode,
+                        CardName = basketCheckoutEvent.OrderDto.CardName,
+                        CardNumber = basketCheckoutEvent.OrderDto.CardNumber,
+                        Expiration = basketCheckoutEvent.OrderDto.Expiration,
+                        CVV = basketCheckoutEvent.OrderDto.CVV,
+                        PaymentMethod = basketCheckoutEvent.OrderDto.PaymentMethod,
+                        Items = basketCheckoutEvent.OrderDto.Items.Select(i => new Application.Dtos.OrderItemDto
+                        {
+                            ProductId = i.ProductId,
+                            Quantity = i.Quantity,
+                            Price = i.Price
+                        }).ToList()
+                    }
+                };
 
-            _logger.LogInformation("BasketCheckoutEvent consumed successfully. Created Order Id : {newOrderId}", result);
+                var result = await _mediator.Send(command);
+
+                _logger.LogInformation("BasketCheckoutEvent consumed successfully. Created Order Id : {newOrderId}", result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while consuming BasketCheckoutEvent");
+                Console.WriteLine($"Error: {ex.Message}");
+            }
         }
     }
 }

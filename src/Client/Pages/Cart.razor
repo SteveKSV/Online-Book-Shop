@@ -34,7 +34,7 @@
         </tbody>
     </table>
     <div>Total Price: @Basket.TotalPrice</div>
-    <button class="btn btn-primary" @onclick="Checkout">Checkout</button>
+    <a href="/checkout" class="btn btn-primary">Checkout</a>
 }
 else
 {
@@ -69,8 +69,4 @@ else
         StateHasChanged();
     }
 
-    private async Task Checkout()
-    {
-        // Implement checkout logic
-    }
 }

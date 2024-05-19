@@ -13,6 +13,25 @@ namespace Application.Profiles
         {
             CreateMap<OrderItem, OrderItemDto>()
                 .ForMember(dest => dest.ProductId, opt => opt.MapFrom(src => src.ProductId)).ReverseMap();
+            
+            CreateMap<AddOrderDto, Order>()
+              .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items.Select(i => new OrderItem
+              {
+                  Id = Guid.NewGuid(),
+                  ProductId = i.ProductId,
+                  Quantity = i.Quantity,
+                  Price = i.Price
+              })));
+
+
+
+            CreateMap<Order, AddOrderDto>()
+                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items.Select(i => new OrderItemDto
+               {
+                   ProductId = i.ProductId,
+                   Quantity = i.Quantity,
+                   Price = i.Price
+               })));
 
             CreateMap<UpdateOrderDto, Order>()
                    .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
@@ -41,7 +60,8 @@ namespace Application.Profiles
                     Price = i.Price
                 })));
 
-            CreateMap<BasketCheckoutEvent, CheckoutOrder>().ReverseMap();
+            CreateMap<BasketCheckoutEvent, CheckoutOrder>()
+              .ForMember(dest => dest.OrderDto, opt => opt.MapFrom(src => src.OrderDto)).ReverseMap();
 
             CreateMap<Order, OrderDto>().ReverseMap();
             CreateMap<OrderDto, GetOrderById>().ReverseMap();
@@ -64,15 +84,6 @@ namespace Application.Profiles
                 .ForMember(dest => dest.CVV, opt => opt.MapFrom(src => src.OrderDto.CVV))
                 .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.OrderDto.PaymentMethod))
                 .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderDto.Items.Select(i => new OrderItem
-                {
-                    Id = Guid.NewGuid(),
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity,
-                    Price = i.Price
-                })));
-
-            CreateMap<AddOrderDto, Order>()
-                .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items.Select(i => new OrderItem
                 {
                     Id = Guid.NewGuid(),
                     ProductId = i.ProductId,

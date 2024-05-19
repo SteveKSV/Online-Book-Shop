@@ -1,7 +1,8 @@
 ﻿    using Basket.API.GrpcServices;
     using Basket.Entities;
     using Basket.Managers.Interfaces;
-    using EventBusMessages.Events;
+using EventBusMessages.Common;
+using EventBusMessages.Events;
     using MassTransit;
     using Microsoft.AspNetCore.Mvc;
     using System.Net;
@@ -88,11 +89,11 @@
                 }
 
                 // send checkout event to rabbitmq
-                var eventMessage = new BasketCheckoutEvent()
+                var orderDto = new Order
                 {
-                    UserName = basketCheckout.UserName,
+                    UserName = basket.UserName,
+                    TotalPrice = basket.TotalPrice,
                     Quantity = basketCheckout.Quantity,
-                    TotalPrice = basketCheckout.TotalPrice,
                     FirstName = basketCheckout.FirstName,
                     LastName = basketCheckout.LastName,
                     EmailAddress = basketCheckout.EmailAddress,
@@ -105,9 +106,19 @@
                     Expiration = basketCheckout.Expiration,
                     CVV = basketCheckout.CVV,
                     PaymentMethod = basketCheckout.PaymentMethod,
-                }; 
+                    Items = basket.Items.Select(item => new OrderItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        Price = item.Price
+                    }).ToList()
+                };
 
-                eventMessage.TotalPrice = basket.TotalPrice;
+                var eventMessage = new BasketCheckoutEvent
+                {
+                    OrderDto = orderDto
+                };
+
                 await _publishEndpoint.Publish<BasketCheckoutEvent>(eventMessage);
 
                 // remove the basket

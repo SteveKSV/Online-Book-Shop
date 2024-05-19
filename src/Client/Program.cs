@@ -17,7 +17,7 @@ builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSect
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
-
+builder.Services.AddScoped<IOrderService, OrderService>();
 //////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
 builder.Services.AddAuthentication(options =>
 {
