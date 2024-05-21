@@ -62,5 +62,15 @@ namespace Basket.Managers
 
             return basket;
         }
+
+        public async Task UpdateUserNameInBasket(string oldUserName, string newUserName)
+        {
+            var basket = await GetBasket(oldUserName);
+            if (basket != null)
+            {
+                basket.UserName = newUserName;
+                await UpdateBasket(basket);
+            }
+        }
     }
 }

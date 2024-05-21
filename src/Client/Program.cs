@@ -1,6 +1,8 @@
 using Client.Services;
 using Client.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +20,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+
 //////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
 builder.Services.AddAuthentication(options =>
 {
@@ -34,10 +38,11 @@ builder.Services.AddAuthentication(options =>
         options.Authority = builder.Configuration["InteractiveServiceSettings:AuthorityUrl"];
         options.ClientId = builder.Configuration["InteractiveServiceSettings:ClientId"];
         options.ClientSecret = builder.Configuration["InteractiveServiceSettings:ClientSecret"];
-
         options.ResponseType = "code";
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
+
+        options.ClaimActions.Remove("email");
     }
 );
 

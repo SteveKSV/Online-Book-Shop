@@ -27,5 +27,5 @@ namespace Application.Features.Orders.CommandHandlers
 
             throw new Exception($"Order is null in Handler (UpdateOrderHandler)");
         }
-}
+    }
 }

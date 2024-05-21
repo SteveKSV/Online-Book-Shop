@@ -1,6 +1,6 @@
 ﻿using IdentityModel.Client;
 
-namespace Client.Services
+namespace Client.Services.Interfaces
 {
     public interface ITokenService
     {

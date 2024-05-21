@@ -79,7 +79,10 @@ namespace IdentityServer
                     AllowOfflineAccess = true,
                     RequirePkce = true,
                     RequireConsent = true,
-                    AllowPlainTextPkce = false
+                    AllowPlainTextPkce = false,
+                    AlwaysIncludeUserClaimsInIdToken = true,
+                    AlwaysSendClientClaims = true,
+                    UpdateAccessTokenClaimsOnRefresh = true,
                 }
             };
     }

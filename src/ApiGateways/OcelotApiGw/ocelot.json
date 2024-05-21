@@ -14,7 +14,7 @@
         }
       ],
       "UpstreamPathTemplate": "/catalog",
-      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ],
+      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ]
       //"AuthenticationOptions": {
       //  "AuthenticationProviderKey": "IdentityApiKey",
       //  "AllowedScopes": [ "openid", "Catalog.read" ]
@@ -179,6 +179,18 @@
       "UpstreamPathTemplate": "/basket/checkout",
       "UpstreamHttpMethod": [ "POST" ]
     },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{oldUserName}/update-username/{newUserName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{oldUserName}/update-username/{newUserName}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
     // Order.API
     {
       "DownstreamPathTemplate": "/api/Order/",
@@ -203,6 +215,18 @@
       ],
       "UpstreamPathTemplate": "/order/{id}",
       "UpstreamHttpMethod": [ "GET", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Order/update-username/{oldUserName}/{newUserName}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "UpstreamPathTemplate": "/order/update-username/{oldUserName}/{newUserName}",
+      "UpstreamHttpMethod": [ "PUT" ]
     }
   ]
 }

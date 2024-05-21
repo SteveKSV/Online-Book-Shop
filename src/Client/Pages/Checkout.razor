@@ -32,7 +32,10 @@
             }
         </tbody>
     </table>
-    <div>Total Price: @Basket.TotalPrice</div>
+
+    <div><b>Total Price:</b> @Basket.TotalPrice</div>
+    
+    <hr />
 
     <EditForm Model="BasketCheckout" OnValidSubmit="PlaceOrder" @key="BasketCheckout.UserName">
         <DataAnnotationsValidator />
@@ -108,7 +111,6 @@ else
 @code {
     public bool IsOrderSuccessful { get; set; } = false; 
     public ShoppingCart Basket { get; set; } = new ShoppingCart();
-    public DeliveryInfo Delivery { get; set; } = new DeliveryInfo();
     [Inject] public IShoppingCartService Service { get; set; }
     [Inject] public IOrderService OrderService { get; set; }
     public BasketCheckout BasketCheckout { get; set; } = new BasketCheckout();
@@ -133,59 +135,9 @@ else
         Navigation.NavigateTo("/checkout#successMessage");
 
         await Task.Delay(5000);
-        // Order placed successfully, maybe redirect to a confirmation page
+
         Navigation.NavigateTo("/", true);
         StateHasChanged();
 
     }
-    // private async Task PlaceOrder()
-    // {
-    //     // Construct order object with basket items and delivery information
-    //     var order = new CheckoutOrder
-    //     {   
-    //         OrderDto = new Order
-    //         {
-    //                 UserName = Basket.UserName,
-    //                 TotalPrice = Basket.TotalPrice,
-    //                 Quantity = Basket.Items.Sum(item => item.Quantity),
-    //                 FirstName = Delivery.FirstName,
-    //                 LastName = Delivery.LastName,
-    //                 EmailAddress = Delivery.EmailAddress,
-    //                 AddressLine = Delivery.AddressLine,
-    //                 Country = Delivery.Country,
-    //                 State = Delivery.State,
-    //                 ZipCode = Delivery.ZipCode,
-    //                 CardName = Delivery.CardName,
-    //                 CardNumber = Delivery.CardNumber,
-    //                 Expiration = Delivery.Expiration,
-    //                 CVV = Delivery.CVV,
-    //                 PaymentMethod = Delivery.PaymentMethod,
-    //                 Items = Basket.Items.Select(item => new OrderItem
-    //                 {
-    //                     ProductId = item.ProductId,
-    //                     Quantity = item.Quantity,
-    //                     Price = item.Price
-    //                 }).ToList()
-    //         }
-    //     };
-
-    //     // Send the order to the Order.API
-    //     var result = await OrderService.PlaceOrder(order);
-
-    //     // Handle the result as needed
-    //     if (result != null)
-    //     {
-    //         IsOrderSuccessful = true;
-    //         StateHasChanged();
-    //         Navigation.NavigateTo("/checkout#successMessage");
-
-    //         await Task.Delay(5000);
-    //         // Order placed successfully, maybe redirect to a confirmation page
-    //         Navigation.NavigateTo("/");
-    //     }
-    //     else
-    //     {
-    //         // Order placement failed, display an error message
-    //     }
-    // }
 }

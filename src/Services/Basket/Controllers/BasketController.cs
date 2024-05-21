@@ -152,5 +152,13 @@ using EventBusMessages.Events;
 
             return Ok(basket);
         }
+
+        [HttpPut("{oldUserName}/update-username/{newUserName}")]
+        [ProducesResponseType(typeof(void), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> UpdateUserNameInBasket(string oldUserName, string newUserName)
+        {
+            await _repository.UpdateUserNameInBasket(oldUserName, newUserName);
+            return Ok();
+        }
     }
 }

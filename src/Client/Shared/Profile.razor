@@ -1,0 +1,84 @@
+﻿@page "/profile"
+@using Client.Models
+@using Client.Services.Interfaces
+@attribute [Authorize]
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div>
+    @if (IsChangeSuccessful)
+    {
+        <h2 id="successMessage">User is changed successfully! <br /> We are doing logout in 6...5...4...3...2...1...!</h2>
+    } 
+    else
+    {
+        <h1>Profile</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@UpdateUser.OldUsername</td>
+                    <td>@UpdateUser.OldEmail</td>
+                </tr>
+            </tbody>
+        </table>
+
+
+        <form @onsubmit="UpdateProfile">
+            <div class="form-group">
+                <label for="userName">Change Username:</label>
+                <input type="text" class="form-control" id="userName" @bind-value="UpdateUser.NewUsername" placeholder="@UpdateUser.OldUsername">
+            </div>
+            <div class="form-group">
+                <label for="email">Change Email:</label>
+                <input type="text" class="form-control" id="email" @bind-value="UpdateUser.NewEmail" placeholder="@UpdateUser.OldEmail">
+            </div>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+    }
+   
+</div>
+
+
+@code {
+    public bool IsChangeSuccessful { get; set; } = false;
+    public UpdateUser UpdateUser { get; set; } = new();
+    [Inject] IUserProfileService ProfileService { get; set; }
+    [Inject] NavigationManager NavManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            UpdateUser.OldUsername = user.Identities
+                                .SelectMany(identity => identity.Claims)
+                                .FirstOrDefault(claim => claim.Type == "name")?.Value;
+            UpdateUser.OldEmail = await ProfileService.GetUserEmail(UpdateUser.OldUsername);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task UpdateProfile()
+    {
+        await ProfileService.ChangeUser(UpdateUser);
+
+        IsChangeSuccessful = true;
+
+        StateHasChanged();
+
+        NavManager.NavigateTo("/profile#successMessage");
+
+        StateHasChanged();
+        await Task.Delay(6000);
+
+        NavManager.NavigateTo("/Logout", true);
+    }
+}

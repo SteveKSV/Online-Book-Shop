@@ -1,4 +1,5 @@
-﻿using Application.Interfaces;
+﻿using Application.Features.Orders.Commands;
+using Application.Interfaces;
 using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -125,6 +126,30 @@ namespace Infrastructure.Repositories
             catch (Exception ex)
             {
                 throw new Exception($"Unexpected error occurred while updating order: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> UpdateUserNameInOrders(UpdateUsername updateUsername)
+        {
+            var orders = await GetOrdersByUsername(updateUsername.OldUsername);
+
+            if (orders.Any())
+            {
+                foreach (var order in orders)
+                {
+                    order.UserName = updateUsername.NewUsername;
+                }
+            }
+          
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating usernames in orders: {ex.Message}");
+                return false;
             }
         }
     }

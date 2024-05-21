@@ -1,7 +1,10 @@
 using IdentityServer;
 using IdentityServer.Data;
+using IdentityServer.Services;
+using IdentityServer4.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 //////////////////////// SEED DATABASE WITH STATIC FILES (IdentityServer project -> dotnet run /seed) ///////////////////////////////
 var seed = args.Contains("/seed");
@@ -29,8 +32,11 @@ builder.Services.AddDbContext<AspNetIdentityDbContext>(opt =>
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
         .AddEntityFrameworkStores<AspNetIdentityDbContext>();
 
+builder.Services.AddTransient<IProfileService, ProfileService>();
+
 //////////////////////// IDENTITY-SERVER-4 CONFIGURATION ///////////////////////////////
 builder.Services.AddIdentityServer()
+        .AddProfileService<ProfileService>()
         .AddAspNetIdentity<IdentityUser>()
         .AddConfigurationStore(opt =>
         {

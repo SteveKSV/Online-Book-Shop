@@ -3,6 +3,7 @@
 
 
 using IdentityModel;
+using IdentityServer.Models;
 using IdentityServer.Quickstart.Account;
 using IdentityServer4;
 using IdentityServer4.Events;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace IdentityServerHost.Quickstart.UI
@@ -56,6 +58,86 @@ namespace IdentityServerHost.Quickstart.UI
             _userManager = userManager;
         }
 
+        [HttpGet("/Account/Email/{username}")]
+        public async Task<IActionResult> GetUserEmail(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user != null)
+            {
+                return Ok(user.Email);
+            }
+
+            return NotFound();
+        }
+
+
+        [HttpPut("/Account/ChangeUser/{oldUsername}")]
+        public async Task<IActionResult> ChangeUser(string oldUsername, [FromBody] UpdateUser userInfo)
+        {
+            if (string.IsNullOrEmpty(oldUsername))
+            {
+                return BadRequest("Old username is required.");
+            }
+
+            var user = await _userManager.FindByNameAsync(oldUsername);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var claims = await _userManager.GetClaimsAsync(user);
+
+            // Change username if provided and different
+            if (!string.IsNullOrEmpty(userInfo.NewUsername) && userInfo.NewUsername != oldUsername)
+            {
+                // Check if the new username is unique
+                var userWithNewUsername = await _userManager.FindByNameAsync(userInfo.NewUsername);
+                if (userWithNewUsername != null)
+                {
+                    return BadRequest("Username already exists.");
+                }
+
+                // Change the username
+                var result = await _userManager.SetUserNameAsync(user, userInfo.NewUsername);
+                if (result.Succeeded)
+                {
+                    // Update the "name" claim
+                    var nameClaim = claims.FirstOrDefault(c => c.Type == "name");
+                    if (nameClaim != null)
+                    {
+                        var removeClaimResult = await _userManager.RemoveClaimAsync(user, nameClaim);
+                        if (!removeClaimResult.Succeeded)
+                        {
+                            return StatusCode(500, "Failed to remove name claim.");
+                        }
+                    }
+
+                    var addClaimResult = await _userManager.AddClaimAsync(user, new Claim("name", userInfo.NewUsername));
+                    if (!addClaimResult.Succeeded)
+                    {
+                        return StatusCode(500, "Failed to add name claim.");
+                    }
+                }
+                else
+                {
+                    var errors = result.Errors.Select(e => e.Description);
+                    return BadRequest(errors);
+                }
+            }
+
+            // Change email if provided and different
+            if (!string.IsNullOrEmpty(userInfo.NewEmail) && userInfo.NewEmail != user.Email)
+            {
+                var resultChangeEmail = await _userManager.SetEmailAsync(user, userInfo.NewEmail);
+                if (!resultChangeEmail.Succeeded)
+                {
+                    return StatusCode(500, "Failed to set new email.");
+                }
+            }
+
+            return Ok("Username and/or email is changed!");
+        }
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -67,10 +149,22 @@ namespace IdentityServerHost.Quickstart.UI
         {
             if (ModelState.IsValid)
             {
+                var userExists = await _userManager.FindByNameAsync(model.UserName);
+                if (userExists != null)
+                {
+                    ModelState.AddModelError(string.Empty, "Username already exists");
+                    ViewData["UsernameError"] = "Username already exists";
+                    return View(model);
+                }
+
                 var user = new IdentityUser { UserName = model.UserName, Email = model.Email };
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
+                    await _userManager.AddClaimsAsync(user,
+                        new List<Claim> { new("name", user.UserName), new("email", user.Email) });
+
+                    // Успішна реєстрація користувача
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return Redirect("https://localhost:5007/");
                 }
@@ -149,6 +243,7 @@ namespace IdentityServerHost.Quickstart.UI
                     // validate username/password against in-memory store
                     if (userLogin == Microsoft.AspNetCore.Identity.SignInResult.Success)
                     {
+
                         await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
 
                         // only set explicit expiration here if user chooses "remember me". 

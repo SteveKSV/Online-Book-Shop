@@ -17,6 +17,9 @@ namespace Client.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(OpenIdConnectDefaults.AuthenticationScheme);
+
             return SignOut(
                 new AuthenticationProperties
                 {
@@ -27,3 +30,4 @@ namespace Client.Pages
         }
     }
 }
+

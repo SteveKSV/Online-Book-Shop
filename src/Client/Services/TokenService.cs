@@ -1,4 +1,5 @@
-﻿using IdentityModel.Client;
+﻿using Client.Services.Interfaces;
+using IdentityModel.Client;
 using Microsoft.Extensions.Options;
 
 namespace Client.Services
