@@ -345,6 +345,9 @@ namespace IdentityServerHost.Quickstart.UI
                 await _events.RaiseAsync(new UserLogoutSuccessEvent(User.GetSubjectId(), User.GetDisplayName()));
             }
 
+            Response.Cookies.Delete(".AspNetCore.Identity.Application");
+            Response.Cookies.Delete("idserv.external");
+            Response.Cookies.Delete("idserv.session");
             // check if we need to trigger sign-out at an upstream identity provider
             if (vm.TriggerExternalSignout)
             {

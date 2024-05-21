@@ -30,7 +30,7 @@
                                 <label asp-for="Password"></label>
                                 <input type="password" class="form-control" placeholder="Password" asp-for="Password" autocomplete="off">
                             </div>
-                            @if (Model.AllowRememberLogin)
+                           @*  @if (Model.AllowRememberLogin)
                             {
                                 <div class="form-group">
                                     <div class="form-check">
@@ -40,7 +40,7 @@
                                         </label>
                                     </div>
                                 </div>
-                            }
+                            } *@
                             <button class="btn btn-primary" name="button" value="login">Login</button>
                             <button class="btn btn-secondary" name="button" value="cancel">Cancel</button>
                         </form>

@@ -1,13 +1,14 @@
 ﻿@page "/profile"
 @using Client.Models
 @using Client.Services.Interfaces
+@using System.ComponentModel.DataAnnotations
 @attribute [Authorize]
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div>
     @if (IsChangeSuccessful)
     {
-        <h2 id="successMessage">User is changed successfully! <br /> We are doing logout in 6...5...4...3...2...1...!</h2>
+        <h2 id="successMessage">User is changed successfully! <br /> We are doing logout in 3...2...1...!</h2>
     } 
     else
     {
@@ -28,17 +29,21 @@
         </table>
 
 
-        <form @onsubmit="UpdateProfile">
+        <EditForm Model="UpdateUser" OnValidSubmit="UpdateProfile">
+            <DataAnnotationsValidator />
+
             <div class="form-group">
                 <label for="userName">Change Username:</label>
-                <input type="text" class="form-control" id="userName" @bind-value="UpdateUser.NewUsername" placeholder="@UpdateUser.OldUsername">
+                <InputText id="userName" @bind-Value="UpdateUser.NewUsername" class="form-control" placeholder="@UpdateUser.OldUsername" />
+                <ValidationMessage For="@(() => UpdateUser.NewUsername)" />
             </div>
             <div class="form-group">
                 <label for="email">Change Email:</label>
-                <input type="text" class="form-control" id="email" @bind-value="UpdateUser.NewEmail" placeholder="@UpdateUser.OldEmail">
+                <InputText id="email" @bind-Value="UpdateUser.NewEmail" class="form-control" placeholder="@UpdateUser.OldEmail" />
+                <ValidationMessage For="@(() => UpdateUser.NewEmail)" />
             </div>
             <button type="submit" class="btn btn-primary">Save</button>
-        </form>
+        </EditForm>
     }
    
 </div>
@@ -68,6 +73,11 @@
 
     private async Task UpdateProfile()
     {
+        if (UpdateUser.Validate(new ValidationContext(UpdateUser)).Any())
+        {
+            // Якщо модель не валідна, не робимо оновлення профілю
+            return;
+        }
         await ProfileService.ChangeUser(UpdateUser);
 
         IsChangeSuccessful = true;
@@ -77,7 +87,7 @@
         NavManager.NavigateTo("/profile#successMessage");
 
         StateHasChanged();
-        await Task.Delay(6000);
+        await Task.Delay(3000);
 
         NavManager.NavigateTo("/Logout", true);
     }

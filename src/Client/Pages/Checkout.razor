@@ -39,63 +39,62 @@
 
     <EditForm Model="BasketCheckout" OnValidSubmit="PlaceOrder" @key="BasketCheckout.UserName">
         <DataAnnotationsValidator />
-        <ValidationSummary />
-
+        <p><span style="color:red">*</span> - field required</p>
         <h2>Delivery Information</h2>
         <div>
-            <label for="firstName">First Name:</label>
+            <label for="firstName">First Name</label>
             <InputText id="firstName" @bind-Value="BasketCheckout.FirstName" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.FirstName)" />
         </div>
         <div>
-            <label for="lastName">Last Name:</label>
+            <label for="lastName">Last Name</label>
             <InputText id="lastName" @bind-Value="BasketCheckout.LastName" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.LastName)" />
         </div>
         <div>
-            <label for="email">Email Address:</label>
+            <label for="email">Email Address <span style="color:red">*</span></label>
             <InputText id="email" @bind-Value="BasketCheckout.EmailAddress" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.EmailAddress)" />
         </div>
         <div>
-            <label for="addressLine">Address Line:</label>
+            <label for="addressLine">Address Line <span style="color:red">*</span></label>
             <InputText id="addressLine" @bind-Value="BasketCheckout.AddressLine" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.AddressLine)" />
         </div>
         <div>
-            <label for="country">Country:</label>
+            <label for="country">Country <span style="color:red">*</span></label>
             <InputText id="country" @bind-Value="BasketCheckout.Country" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.Country)" />
         </div>
         <div>
-            <label for="state">State:</label>
+            <label for="state">State <span style="color:red">*</span></label>
             <InputText id="state" @bind-Value="BasketCheckout.State" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.State)" />
         </div>
         <div>
-            <label for="zipCode">Zip Code:</label>
+            <label for="zipCode">Zip Code <span style="color:red">*</span></label>
             <InputText id="zipCode" @bind-Value="BasketCheckout.ZipCode" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.ZipCode)" />
         </div>
 
         <h2>Payment Information</h2>
         <div>
-            <label for="cardName">Card Name:</label>
+            <label for="cardName">Card Name <span style="color:red">*</span></label>
             <InputText id="cardName" @bind-Value="BasketCheckout.CardName" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.CardName)" />
         </div>
         <div>
-            <label for="cardNumber">Card Number:</label>
+            <label for="cardNumber">Card Number <span style="color:red">*</span></label>
             <InputText id="cardNumber" @bind-Value="BasketCheckout.CardNumber" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.CardNumber)" />
         </div>
         <div>
-            <label for="expiration">Expiration:</label>
+            <label for="expiration">Expiration <span style="color:red">*</span></label>
             <InputText id="expiration" @bind-Value="BasketCheckout.Expiration" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.Expiration)" />
         </div>
         <div>
-            <label for="cvv">CVV:</label>
+            <label for="cvv">CVV <span style="color:red">*</span></label>
             <InputText id="cvv" @bind-Value="BasketCheckout.CVV" class="form-control" />
             <ValidationMessage For="@(() => BasketCheckout.CVV)" />
         </div>
