@@ -1,0 +1,124 @@
+﻿.card {
+    transition: transform 0.3s;
+    
+    height: 100%;
+}
+
+.row {
+}
+.card-body {
+    flex-grow: 1;
+}
+
+.card-footer {
+    flex-shrink: 0;
+}
+.card-anchor {
+    text-decoration: none !important;
+    color: inherit;
+}
+.card:hover {
+    transform: scale(1.05);
+}
+
+h1, h5, .card-body {
+    text-align: center;
+}
+
+
+.scrollable-panel {
+    max-height: 80vh;
+    overflow-y: auto;
+    position: fixed;
+    top: 50px;
+    right: 0;
+    width: 20%;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 576px){
+    .flex-sm-row {
+        flex-direction: row !important;
+    }
+
+}
+
+@media (max-width: 446px) {
+    .flex-xs-column {
+        flex-direction: column !important;
+    }
+    .card-footer {
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .card-footer .flex-md-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .card-footer .flex-md-row .mb-md-0 {
+            margin-bottom: 0;
+    }
+
+    .col-md-9 {
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .card-footer .flex-md-row {
+        justify-content: center;
+    }
+
+    .card-footer .flex-md-row .mb-md-0 {
+            margin-bottom: 0;
+    }
+
+    .col-md-9 {
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 1180px) {
+    .scrollable-panel {
+        position: static;
+        width: 80%;
+        margin: 20px auto;
+        overflow-y: auto;
+        background-color: #fff;
+        padding-top: 12px;
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-footer .flex-md-row {
+        flex-direction: column;
+        align-items: center;
+    }
+
+        .card-footer .flex-md-row .mb-md-0 {
+            margin-bottom: 0;
+        }
+
+    .col-md-9 {
+        width: 100%;
+    }
+}
+
+
+@media (min-width: 641px) and (max-width: 768px) {
+    .col-md-6 {
+        flex: 0 0 50%; 
+    }
+}
+
+@media (max-width: 640px) {
+    .col-md-6 {
+        flex: 0 0 100%; 
+    }
+}

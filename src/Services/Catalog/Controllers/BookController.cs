@@ -1,12 +1,15 @@
 ﻿using Catalog.Entities;
 using Catalog.Managers.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Net;
 
 namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    //[Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;
@@ -18,9 +21,25 @@ namespace Catalog.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
+        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
+            [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
+            [FromQuery] List<string>? genres = null,
+            [FromQuery] List<string>? languages = null
+            )
         {
-            var products = await _manager.GetBooks();
+            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genres, languages);
+            var metadata = new
+            {
+                products.TotalCount,
+                products.PageSize,
+                products.CurrentPage,
+                products.TotalPages,
+                products.HasNext,
+                products.HasPrevious
+            };
+            
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+            
             return Ok(products);
         }
 
@@ -45,31 +64,7 @@ namespace Catalog.Controllers
             var book = await _manager.GetBookByTitle(title);
             return Ok(book);
         }
-
-        [HttpGet("GetBooksByAuthor/{authorName}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByAuthor(string authorName)
-        {
-            var books = await _manager.GetBooksByAuthor(authorName);
-            return Ok(books);
-        }
-
-        [HttpGet("GetBooksByPublisher/{publisher}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByPublisher(string publisher)
-        {
-            var books = await _manager.GetBooksByPublisher(publisher);
-            return Ok(books);
-        }
-
-        [HttpGet("GetBooksByGenre/{genre}")]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBooksByGenre(string genre)
-        {
-            var books = await _manager.GetBooksByGenre(genre);
-            return Ok(books);
-        }
-
+        
         [HttpPost]
         [ProducesResponseType(typeof(Book), (int)HttpStatusCode.Created)]
         public async Task<ActionResult<Book>> CreateBook([FromBody] Book book)
@@ -96,6 +91,7 @@ namespace Catalog.Controllers
         {
             return Ok(await _manager.DeleteEntity(id));
         }
+       
         private string GenerateRandomHexadecimalId()
         {
             // Generate a random 24-digit hexadecimal string

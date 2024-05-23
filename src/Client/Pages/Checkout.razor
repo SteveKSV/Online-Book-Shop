@@ -1,0 +1,145 @@
+﻿@page "/checkout"
+@using Client.Models
+@using Client.Services.Interfaces
+@inject NavigationManager Navigation
+
+<h1>Checkout</h1>
+@if (IsOrderSuccessful)
+{
+    <h2 id="successMessage">Order is successful!</h2>
+}
+else
+{
+    @if (Basket.Items.Any())
+    {
+        <h2>Shopping Cart Summary</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Basket.Items)
+                {
+                    <tr>
+                        <td>@item.ProductName</td>
+                        <td>@item.Quantity</td>
+                        <td>@item.Price</td>
+                        <td>@(item.Price * item.Quantity)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div><b>Total Price:</b> @Basket.TotalPrice</div>
+
+        <hr />
+
+        <EditForm Model="BasketCheckout" OnValidSubmit="PlaceOrder" @key="BasketCheckout.UserName">
+            <DataAnnotationsValidator />
+            <p><span style="color:red">*</span> - field required</p>
+            <h2>Delivery Information</h2>
+            <div>
+                <label for="firstName">First Name</label>
+                <InputText id="firstName" @bind-Value="BasketCheckout.FirstName" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.FirstName)" />
+            </div>
+            <div>
+                <label for="lastName">Last Name</label>
+                <InputText id="lastName" @bind-Value="BasketCheckout.LastName" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.LastName)" />
+            </div>
+            <div>
+                <label for="email">Email Address <span style="color:red">*</span></label>
+                <InputText id="email" @bind-Value="BasketCheckout.EmailAddress" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.EmailAddress)" />
+            </div>
+            <div>
+                <label for="addressLine">Address Line <span style="color:red">*</span></label>
+                <InputText id="addressLine" @bind-Value="BasketCheckout.AddressLine" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.AddressLine)" />
+            </div>
+            <div>
+                <label for="country">Country <span style="color:red">*</span></label>
+                <InputText id="country" @bind-Value="BasketCheckout.Country" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.Country)" />
+            </div>
+            <div>
+                <label for="state">State <span style="color:red">*</span></label>
+                <InputText id="state" @bind-Value="BasketCheckout.State" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.State)" />
+            </div>
+            <div>
+                <label for="zipCode">Zip Code <span style="color:red">*</span></label>
+                <InputText id="zipCode" @bind-Value="BasketCheckout.ZipCode" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.ZipCode)" />
+            </div>
+
+            <h2>Payment Information</h2>
+            <div>
+                <label for="cardName">Card Name <span style="color:red">*</span></label>
+                <InputText id="cardName" @bind-Value="BasketCheckout.CardName" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.CardName)" />
+            </div>
+            <div>
+                <label for="cardNumber">Card Number <span style="color:red">*</span></label>
+                <InputText id="cardNumber" @bind-Value="BasketCheckout.CardNumber" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.CardNumber)" />
+            </div>
+            <div>
+                <label for="expiration">Expiration <span style="color:red">*</span></label>
+                <InputText id="expiration" @bind-Value="BasketCheckout.Expiration" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.Expiration)" />
+            </div>
+            <div>
+                <label for="cvv">CVV <span style="color:red">*</span></label>
+                <InputText id="cvv" @bind-Value="BasketCheckout.CVV" class="form-control" />
+                <ValidationMessage For="@(() => BasketCheckout.CVV)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Place Order</button>
+        </EditForm>
+    }
+    else
+    {
+        <p>Your shopping cart is empty.</p>
+    }
+}
+
+@code {
+    public bool IsOrderSuccessful { get; set; } = false; 
+    public ShoppingCart Basket { get; set; } = new ShoppingCart();
+    [Inject] public IShoppingCartService Service { get; set; }
+    [Inject] public IOrderService OrderService { get; set; }
+    public BasketCheckout BasketCheckout { get; set; } = new BasketCheckout();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBasket();
+    }
+
+    protected async Task LoadBasket()
+    {
+        Basket = await Service.GetCart();
+    }
+    private async Task PlaceOrder()
+    {
+        BasketCheckout.UserName = Basket.UserName;
+        BasketCheckout.Quantity = Basket.Items.Sum(item => item.Quantity);
+        BasketCheckout.TotalPrice = Basket.TotalPrice;
+        await OrderService.PlaceOrder(BasketCheckout);
+
+        IsOrderSuccessful = true;
+        StateHasChanged();
+        Navigation.NavigateTo("/checkout#successMessage");
+
+        await Task.Delay(5000);
+
+        Navigation.NavigateTo("/", true);
+        StateHasChanged();
+
+    }
+}

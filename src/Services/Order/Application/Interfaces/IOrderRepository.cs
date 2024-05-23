@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Features.Orders.Commands;
+using Domain.Entities;
 
 namespace Application.Interfaces
 {
@@ -11,5 +12,6 @@ namespace Application.Interfaces
         Task<bool> DeleteOrder(Guid id);
 
         Task<List<Order>> GetOrdersByUsername(string username);
+        Task<bool> UpdateUserNameInOrders(UpdateUsername updateUsername);
     }
 }

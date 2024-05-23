@@ -1,0 +1,76 @@
+﻿@inherits LayoutComponentBase
+@using Client.Services.Interfaces
+@using Microsoft.AspNetCore.Components
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>What To Read</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 auth">
+            <div class="welcome-message">
+                @if (UserIsAuthenticated)
+                {
+                    <span>Welcome,</span> <a href="/profile" class="profile-link">@UserName!</a>
+                }
+            </div>
+            <div>
+                <a href="cart" class="ms-3">
+                    <span class="oi oi-cart"></span>
+                    Cart @if (ItemCount > 0)
+                    {
+                        <span class="badge bg-secondary">@ItemCount</span>
+                    }
+                </a>
+                <AuthorizeView>
+                    <Authorized>
+                        <a href="logout" class="btn btn-link">Logout</a>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="login" class="btn btn-link">Login</a>
+                        <a href="register" class="btn btn-link">Register</a>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool UserIsAuthenticated => authenticationState.User.Identity.IsAuthenticated;
+    private string UserName => ShoppingCartService.GetUserNameFromClaims(authenticationState.User);
+
+    [Inject] public IShoppingCartService ShoppingCartService { get; set; }
+    public int ItemCount { get; set; }
+
+    private AuthenticationState authenticationState;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ShoppingCartService.CartChanged += OnCartChanged;
+        await UpdateItemCount();
+    }
+
+    private async Task UpdateItemCount()
+    {
+        ItemCount = await ShoppingCartService.GetItemCountAsync();
+        StateHasChanged();
+    }
+
+    private async void OnCartChanged(object sender, EventArgs args)
+    {
+        await UpdateItemCount();
+    }
+}

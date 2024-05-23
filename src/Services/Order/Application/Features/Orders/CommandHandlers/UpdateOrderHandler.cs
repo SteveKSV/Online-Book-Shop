@@ -18,14 +18,14 @@ namespace Application.Features.Orders.CommandHandlers
 
         public async Task<bool> Handle(UpdateOrder request, CancellationToken cancellationToken)
         {
-            Order order = _mapper.Map<Order>(request);
+            var order = _mapper.Map<Order>(request.Order);
 
             if (order != null)
             {
                 return await _repository.UpdateOrder(order);
             }
 
-            throw new Exception($"Order is null in Handler (UpdateHandler)");
+            throw new Exception($"Order is null in Handler (UpdateOrderHandler)");
         }
-}
+    }
 }

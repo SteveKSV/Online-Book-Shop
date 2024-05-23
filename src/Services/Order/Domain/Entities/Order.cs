@@ -23,5 +23,7 @@ namespace Domain.Entities
         public string Expiration { get; set; }
         public string CVV { get; set; }
         public int PaymentMethod { get; set; }
+
+        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
     }
 }

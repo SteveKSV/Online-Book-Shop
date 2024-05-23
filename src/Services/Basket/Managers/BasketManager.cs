@@ -1,4 +1,5 @@
-﻿using Basket.Entities;
+﻿using Basket.API.GrpcServices;
+using Basket.Entities;
 using Basket.Managers.Interfaces;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
@@ -26,9 +27,50 @@ namespace Basket.Managers
 
             return await GetBasket(basket.UserName);
         }
+
+        public async Task<ShoppingCart> UpdateItemQuantity(string userName, string productId, int quantity)
+        {
+            var basket = await GetBasket(userName);
+            if (basket == null) return null;
+
+            var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
+            if (item == null) return basket;
+
+            item.Quantity = quantity;
+
+            return await UpdateBasket(basket);
+        }
         public async Task DeleteBasket(string userName)
         {
             await _redisCache.RemoveAsync(userName);
+        }
+
+        public async Task<ShoppingCart> RemoveItemFromBasket(string userName, string productId)
+        {
+            var basket = await GetBasket(userName);
+            if (basket == null)
+            {
+                return null;
+            }
+
+            var itemToRemove = basket.Items.FirstOrDefault(item => item.ProductId == productId);
+            if (itemToRemove != null)
+            {
+                basket.Items.Remove(itemToRemove);
+                await UpdateBasket(basket);
+            }
+
+            return basket;
+        }
+
+        public async Task UpdateUserNameInBasket(string oldUserName, string newUserName)
+        {
+            var basket = await GetBasket(oldUserName);
+            if (basket != null)
+            {
+                basket.UserName = newUserName;
+                await UpdateBasket(basket);
+            }
         }
     }
 }

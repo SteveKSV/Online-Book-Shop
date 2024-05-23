@@ -68,5 +68,16 @@ namespace Order.Controllers
 
             return BadRequest($"Order with Id {id} wasn't deleted");
         }
+
+        [HttpPut("update-username/{oldUserName}/{newUserName}")]
+        public async Task<ActionResult> UpdateUserNameInOrders(string oldUserName, string newUserName)
+        {
+            if (await _mediator.Send(new UpdateUsername { OldUsername = oldUserName, NewUsername = newUserName }))
+            {
+                return Ok($"Old username {oldUserName} in orders was replaced by {newUserName}");
+            }
+
+            return BadRequest($"Failed to update username in orders");
+        }
     }
 }
