@@ -29,33 +29,30 @@ namespace Client.Services
 
             // Виконання запиту
             var response = await _httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                // Retrieve books from response body
-                var books = await response.Content.ReadFromJsonAsync<List<BookModel>>();
+            
+            if (!response.IsSuccessStatusCode) return (null, null);
 
-                // Retrieve pagination metadata from response headers
-                var paginationMetadata = ParsePaginationMetadata(response.Headers);
+            // Retrieve books from response body
+            var books = await response.Content.ReadFromJsonAsync<List<BookModel>>();
 
-                return (books, paginationMetadata);
-            }
+            // Retrieve pagination metadata from response headers
+            var paginationMetadata = ParsePaginationMetadata(response.Headers);
 
-            return (null, null);
+            return (books, paginationMetadata);
+
         }
 
         public async Task<List<string>> Get(string queryString = null)
         {
             var response = await _httpClient.GetAsync($"{_configuration.GetSection("apiUrl").Value}/{queryString}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                // Retrieve entities from response body
-                var entities = await response.Content.ReadFromJsonAsync<List<string>>();
+            if (!response.IsSuccessStatusCode) return null;
 
-                return entities;
-            }
+            // Retrieve entities from response body
+            var entities = await response.Content.ReadFromJsonAsync<List<string>>();
 
-            return null;
+            return entities;
+
         }
 
 

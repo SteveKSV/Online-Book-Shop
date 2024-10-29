@@ -17,7 +17,7 @@ namespace Catalog.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<string>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<int>> GetAllGenres()
+        public async Task<ActionResult<int>> GetAllLanguages()
         {
             var languages = await _manager.GetAllLanguages();
             return Ok(languages);

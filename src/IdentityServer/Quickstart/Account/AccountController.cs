@@ -223,8 +223,7 @@ namespace IdentityServerHost.Quickstart.UI
                         // return the response is for better UX for the end user.
                         return this.LoadingPage("Redirect", model.ReturnUrl);
                     }
-
-                    return Redirect(model.ReturnUrl);
+                    return Redirect("https://localhost:5007/");
                 }
                 else
                 {

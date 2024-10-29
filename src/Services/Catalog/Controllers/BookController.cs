@@ -92,13 +92,13 @@ namespace Catalog.Controllers
             return Ok(await _manager.DeleteEntity(id));
         }
        
-        private string GenerateRandomHexadecimalId()
+        private static string GenerateRandomHexadecimalId()
         {
             // Generate a random 24-digit hexadecimal string
-            Random random = new Random();
-            byte[] buffer = new byte[12];
+            var random = new Random();
+            var buffer = new byte[12];
             random.NextBytes(buffer);
-            string randomHexId = string.Concat(buffer.Select(b => b.ToString("x2")));
+            var randomHexId = string.Concat(buffer.Select(b => b.ToString("x2")));
             return randomHexId;
         }
     }

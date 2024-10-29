@@ -12,60 +12,59 @@ namespace Catalog.Managers
         {
         }
         public async Task<PagedList<Book?>> GetBooks(
-            PaginationParams? paginationParams, string? title, string? sortOrder, 
+            PaginationParams? paginationParams, string? title, string? sortOrder,
             List<string>? genres, List<string>? languages)
         {
             var filterBuilder = new FilterDefinitionBuilder<Book>();
             var filter = filterBuilder.Empty;
 
+            // Filter by title if provided
             if (!string.IsNullOrEmpty(title))
             {
                 filter &= filterBuilder.Regex(x => x.Title, new BsonRegularExpression(title, "i"));
             }
 
+            // Filter for genres
             if (genres != null && genres.Any())
             {
-                // Створення фільтра для кожного жанру
-                var genreFilters = genres.Select(genre => filterBuilder.All(x => x.Genre, genres)).ToList();
-
-                // Об'єднання фільтрів за допомогою оператора And
-                filter &= filterBuilder.And(genreFilters);
+                filter &= filterBuilder.AnyIn(x => x.Genre, genres); // Use AnyIn for genre list
             }
 
+            // Filter for languages
             if (languages != null && languages.Any())
             {
-                // Створення фільтрів для кожного жанру
-                var languageFilters = languages.Select(language => filterBuilder.Eq(x => x.LanguageName, language)).ToList();
-
-                // Об'єднання фільтрів за допомогою оператора And
-                filter &= filterBuilder.And(languageFilters);
+                filter &= filterBuilder.In(x => x.LanguageName, languages); // Use In for single value
             }
 
+            // Create the query with the filter
             var query = _collection.Find(filter);
 
             try
             {
+                // Get total count for pagination
                 var totalCount = await _collection.CountDocumentsAsync(filter);
-                var books = await query.ToListAsync();
 
-                if (sortOrder != null)
+                // Add sorting
+                if (!string.IsNullOrEmpty(sortOrder))
                 {
                     switch (sortOrder.ToLower())
                     {
                         case "asc":
-                            books = books.OrderBy(book => book.Price).ToList(); break;
+                            query = query.SortBy(book => book.Price);
+                            break;
                         case "desc":
-                            books = books.OrderByDescending(book => book.Price).ToList(); break;
+                            query = query.SortByDescending(book => book.Price);
+                            break;
                         case "none":
                             break;
                     }
                 }
 
                 // Apply pagination
-                books = books
+                var books = await query
                     .Skip((paginationParams!.PageNumber - 1) * paginationParams.PageSize)
-                    .Take(paginationParams.PageSize)
-                    .ToList();
+                    .Limit(paginationParams.PageSize)
+                    .ToListAsync();
 
                 return new PagedList<Book?>(books!, (int)totalCount, paginationParams.PageNumber, paginationParams.PageSize);
             }
@@ -75,6 +74,7 @@ namespace Catalog.Managers
                 throw;
             }
         }
+
         public async Task<Book> GetBookByTitle(string title)
         {
             return await _collection
