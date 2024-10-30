@@ -3,11 +3,21 @@ using Catalog.Managers.Interfaces;
 using Catalog.Managers;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using Catalog.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //////////////////////// DATABASE CONFIGURATION ///////////////////////////////
-builder.Services.Configure<DatabaseSetting>(builder.Configuration.GetSection("DatabaseSettings"));
+var dbType = Environment.GetEnvironmentVariable("DB_TYPE");
+var connectionString = dbType == "Docker"
+    ? $"mongodb://{Environment.GetEnvironmentVariable("DB_HOST")}:27017/CatalogDb"     // Docker connection string 
+    : builder.Configuration.GetSection("DatabaseSettings:ConnectionString").Value; // Local connection string
+
+builder.Services.Configure<DatabaseSetting>(settings =>
+{
+    settings.ConnectionString = connectionString;
+    settings.DatabaseName = Environment.GetEnvironmentVariable("DB_NAME") ?? "CatalogDb";
+});
 builder.Services.AddTransient<MongoDbContext>();
 
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
@@ -66,6 +76,14 @@ builder.Services.AddSwaggerGen(o =>
 });
 
 var app = builder.Build();
+
+// Seed the database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var mongoDbContext = services.GetRequiredService<MongoDbContext>();
+    CatalogContextSeed.SeedData(mongoDbContext.Books); // Call the seeding method here
+}
 
 if (app.Environment.IsDevelopment())
 {

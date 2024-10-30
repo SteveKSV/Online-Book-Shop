@@ -47,6 +47,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ClientBlazor", "ClientBlazo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AuthServer", "AuthServer", "{0C87A212-78B7-46EA-9270-3EBA96E68E48}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{6DA13737-2258-4036-A2BF-690FB5E94851}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{9A0C52C8-CA95-4DB2-95EE-DBCCD503F7CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A0C52C8-CA95-4DB2-95EE-DBCCD503F7CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A0C52C8-CA95-4DB2-95EE-DBCCD503F7CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6DA13737-2258-4036-A2BF-690FB5E94851}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6DA13737-2258-4036-A2BF-690FB5E94851}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6DA13737-2258-4036-A2BF-690FB5E94851}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6DA13737-2258-4036-A2BF-690FB5E94851}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

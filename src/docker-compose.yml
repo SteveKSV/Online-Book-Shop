@@ -1,0 +1,139 @@
+version: '3.4'
+
+networks:
+  bookapp:
+    name: bookapp
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - bookapp
+
+  redis:
+    image: "redis:alpine"
+    container_name: "redis-cache"
+    ports:
+      - "6379:6379"
+    networks:
+      - bookapp
+
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: "rabbit-mq"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - bookapp
+     
+  # discountdb:
+  #   image: "mcr.microsoft.com/mssql/server:2019-latest"
+  #   container_name: discount-db
+  #   environment:
+  #     - ACCEPT_EULA=Y
+  #     - MSSQL_SA_PASSWORD=Q1w2E3r4$
+  #   ports:
+  #     - "1435:1433"
+  #   volumes:
+  #     - discountdb_data:/var/opt/mssql
+  #     - ./Services/Discount.API/Discount.Grpc/sql/init.sql:/var/opt/mssql/init.sql 
+  #   networks:
+  #     - bookapp
+
+  orderdb:
+    container_name: order-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports: 
+        - 1434:1433
+    environment:
+        - ACCEPT_EULA=Y
+        - MSSQL_SA_PASSWORD=Q1w2E3r4$ 
+    networks:
+        - bookapp
+    volumes:
+        - orderdb_data:/var/opt/mssql
+
+  catalog:
+    image: ${DOCKER_REGISTRY-}catalog
+    build:
+      context: .
+      dockerfile: Services/Catalog/Dockerfile
+    container_name: catalog-api
+    environment:
+      - DB_TYPE=Docker
+      - DB_HOST=mongo
+      - DB_NAME=CatalogDb
+    depends_on:
+      - mongo
+    networks:
+      - bookapp
+    ports:
+      - "8000:80"
+
+  basket:
+    image: ${DOCKER_REGISTRY-}basket
+    build:
+      context: .
+      dockerfile: Services/Basket/Dockerfile
+    container_name: basket-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - EventBusSettings__HostAddress=amqp://guest:guest@rabbitmq:5672
+      - CacheSettings__ConnectionString=redis:6379
+      - DiscountGrpcConnection__ConnectionString=http://discount-grpc:80
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - bookapp
+    ports:
+      - "8001:80"
+
+  # discount.grpc:
+  #   container_name: discount-grpc-api
+  #   image: ${DOCKER_REGISTRY-}discountgrpc
+  #   build:
+  #     context: .
+  #     dockerfile: Services/Discount/Discount.Grpc/Dockerfile
+  #   networks:
+  #    - bookapp
+  #   ports: 
+  #    - 8003:80
+  #   depends_on: 
+  #    - discountdb
+  #   environment:
+  #     - DB_TYPE=Docker
+  #     - DISCOUNT_DB_CONNECTION=Server=discount-db;Database=DiscountDb;User Id=sa;Password=Q1w2E3r4$;TrustServerCertificate=True;
+
+  order:
+      image: ${DOCKER_REGISTRY-}order
+      container_name: order-api
+      build:
+        context: .
+        dockerfile: Services/Order/Presentation/Dockerfile
+      networks:
+        - bookapp
+      ports:
+        - "8004:80"
+      environment:
+        - EventBusSettings__HostAddress=amqp://guest:guest@rabbitmq:5672
+        - DB_TYPE=Docker
+        - DB_HOST=orderdb
+        - DB_NAME=OrderDb
+        - DB_SA_PASSWORD=Q1w2E3r4$ 
+      depends_on:
+        - orderdb
+        - rabbitmq
+
+volumes:
+  mongo_data:
+  # discountdb_data:
+  orderdb_data:
+
+
