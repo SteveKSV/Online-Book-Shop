@@ -18,11 +18,32 @@ var builder = WebApplication.CreateBuilder(args);
 
 //////////////////////// ASSEMBLY AND CONNECTION STRING ///////////////////////////////
 var assembly = typeof(Program).Assembly.GetName().Name;
-var connectionString = builder.Configuration.GetConnectionString("BookOnlineConnStr");
 
-if (seed)
+// Get the DB_TYPE environment variable
+var dbType = Environment.GetEnvironmentVariable("DB_TYPE") ?? "local"; // Default to 'local'
+
+// Set up connection string based on DB_TYPE
+string connectionString;
+if (dbType == "Docker")
 {
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost"; // Default to localhost
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "IdentityServerDb";
+    var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD") ?? "YourDefaultPassword"; // Ensure a default or safe handling
+
+    connectionString = $"Server={dbHost};Database={dbName};User Id=sa;Password={dbPassword};TrustServerCertificate=True";
+
+    // Always seed data when using Docker
     SeedData.EnsureSeedData(connectionString!);
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("BookOnlineConnStr");
+
+    // Seed data only if /seed is specified in arguments
+    if (seed)
+    {
+        SeedData.EnsureSeedData(connectionString!);
+    }
 }
 
 //////////////////////// DB CONTEXTS CONFIGURATION ///////////////////////////////
@@ -40,15 +61,15 @@ builder.Services.AddIdentityServer()
         .AddAspNetIdentity<IdentityUser>()
         .AddConfigurationStore(opt =>
         {
-                opt.ConfigureDbContext = b =>
-                        b.UseSqlServer(connectionString,
-                                o => o.MigrationsAssembly(assembly));
+            opt.ConfigureDbContext = b =>
+                    b.UseSqlServer(connectionString,
+                            o => o.MigrationsAssembly(assembly));
         })
         .AddOperationalStore(opt =>
         {
-                opt.ConfigureDbContext = b =>
-                        b.UseSqlServer(connectionString,
-                                o => o.MigrationsAssembly(assembly));
+            opt.ConfigureDbContext = b =>
+                    b.UseSqlServer(connectionString,
+                            o => o.MigrationsAssembly(assembly));
         })
         .AddDeveloperSigningCredential();
 

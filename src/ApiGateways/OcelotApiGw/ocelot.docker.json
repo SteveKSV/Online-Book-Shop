@@ -1,0 +1,232 @@
+{
+  "GlobalConfiguration": {
+    "BaseUrl": "https://ocelotapigw"
+  },
+  "Routes": [
+    // Catalog.API
+    {
+      "DownstreamPathTemplate": "/api/book",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog",
+      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ]
+      //"AuthenticationOptions": {
+      //  "AuthenticationProviderKey": "IdentityApiKey",
+      //  "AllowedScopes": [ "openid", "Catalog.read" ]
+      //}
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/{id}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ]
+    },  
+    {
+      "DownstreamPathTemplate": "/api/book/GetBookByTitle/{title}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBookByTitle/{title}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/GetBooksByAuthor/{authorName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBooksByAuthor/{authorName}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/GetBooksByPublisher/{publisher}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBooksByPublisher/{publisher}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/GetBooksByGenre/{genre}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBooksByGenre/{genre}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/GetBooksCount",
+      "DownstreamScheme": "80",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/GetBooksCount",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Genre/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/genre",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Language",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/language",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+
+
+    // Basket.API
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userName}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}",
+      "UpstreamHttpMethod": [ "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}/quantity/{quantity}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}/quantity/{quantity}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/Checkout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/checkout",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{oldUserName}/update-username/{newUserName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{oldUserName}/update-username/{newUserName}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
+    // Order.API
+    {
+      "DownstreamPathTemplate": "/api/Order/",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "basket",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/order/",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Order/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "order",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/order/{id}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Order/update-username/{oldUserName}/{newUserName}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "order",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/order/update-username/{oldUserName}/{newUserName}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    }
+  ]
+}

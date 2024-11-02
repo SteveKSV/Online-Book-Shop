@@ -7,12 +7,20 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Check if running in Docker or local
+var envType = Environment.GetEnvironmentVariable("ENV_TYPE");
+var configFileName = envType == "Docker" ? "appsettings.docker.json" : "appsettings.json";
+
+// Load the configuration file based on environment
+builder.Configuration.AddJsonFile(configFileName, optional: false, reloadOnChange: true);
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+
 //////////////////////// HTTP CLIENT CONFIGURATION ///////////////////////////////
 builder.Services.AddHttpClient();
 
-//////////////////////// IDENTITY-SERVER-SETTINGS CONFIGURATION FROM APPSETTINGS.JSON ///////////////////////////////
+//////////////////////// IDENTITY-SERVER-SETTINGS CONFIGURATION ///////////////////////////////
 builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection("IdentityServerSettings"));
 
 //////////////////////// DI-SERVICES CONFIGURATION ///////////////////////////////
@@ -42,9 +50,14 @@ builder.Services.AddAuthentication(options =>
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;
 
+        // Check if running in Docker and set RequireHttpsMetadata accordingly
+        var isDocker = envType == "Docker";
+        options.RequireHttpsMetadata = !isDocker;
+
         options.ClaimActions.Remove("email");
     }
 );
+
 
 builder.Services.AddAuthorization(options =>
 {
@@ -54,6 +67,7 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("scope", "Catalog.read");
     });
 });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -64,7 +78,10 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+if (envType != "Docker")
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 

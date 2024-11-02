@@ -6,5 +6,7 @@
         public string ClientName { get; set; }
         public string ClientPassword { get; set; }
         public bool UseHttps { get; set; }
+
+        public bool RequireHttpsMetadata { get; set; } = true;
     }
 }

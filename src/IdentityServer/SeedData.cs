@@ -15,42 +15,56 @@ namespace IdentityServer
         {
             var services = new ServiceCollection();
             services.AddLogging();
-            services.AddDbContext<AspNetIdentityDbContext>(
-                opt => opt.UseSqlServer(connectionString));
+            services.AddDbContext<AspNetIdentityDbContext>(opt =>
+                opt.UseSqlServer(connectionString));
 
             services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<AspNetIdentityDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddOperationalDbContext(
-                opt =>
-                {
-                    opt.ConfigureDbContext = db =>
-                        db.UseSqlServer(connectionString,
-                                sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
-                });
+            // Registering PersistedGrantDbContext
+            services.AddOperationalDbContext(opt =>
+            {
+                opt.ConfigureDbContext = db =>
+                    db.UseSqlServer(connectionString,
+                        sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
+            });
 
-            services.AddConfigurationDbContext(
-                opt =>
-                {
-                    opt.ConfigureDbContext = db =>
-                      db.UseSqlServer(connectionString,
-                              sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
-                });
+            // Registering ConfigurationDbContext
+            services.AddConfigurationDbContext(opt =>
+            {
+                opt.ConfigureDbContext = db =>
+                    db.UseSqlServer(connectionString,
+                        sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
+            });
 
             var serviceProvider = services.BuildServiceProvider();
 
             using var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
-            scope.ServiceProvider.GetService<PersistedGrantDbContext>().Database.Migrate();
 
-            var context = scope.ServiceProvider.GetService<ConfigurationDbContext>();
-            context.Database.Migrate();
+            // Migrate PersistedGrantDbContext
+            var persistedGrantDbContext = scope.ServiceProvider.GetService<PersistedGrantDbContext>();
+            if (persistedGrantDbContext != null)
+            {
+                persistedGrantDbContext.Database.Migrate();
+            }
 
-            EnsureSeedData(context);
+            // Migrate ConfigurationDbContext
+            var configDbContext = scope.ServiceProvider.GetService<ConfigurationDbContext>();
+            if (configDbContext != null)
+            {
+                configDbContext.Database.Migrate();
+                EnsureSeedData(configDbContext);
+            }
 
-            var ctx = scope.ServiceProvider.GetService<AspNetIdentityDbContext>();
-            ctx.Database.Migrate();
-            EnsureUsers(scope);
+            // Migrate AspNetIdentityDbContext
+            var aspNetIdentityDbContext = scope.ServiceProvider.GetService<AspNetIdentityDbContext>();
+            if (aspNetIdentityDbContext != null)
+            {
+                aspNetIdentityDbContext.Database.Migrate();
+                EnsureRoles(scope); // Ensure roles are created
+                EnsureUsers(scope); // Ensure users are created
+            }
         }
 
         private static void EnsureUsers(IServiceScope scope)
@@ -71,27 +85,48 @@ namespace IdentityServer
 
                 if (!result.Succeeded)
                 {
-                    throw new Exception(result.Errors.First().Description);
+                    throw new Exception($"Failed to create user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                 }
 
-                result = userMgr.AddClaimsAsync(
-                         stepan,
-                         new Claim[]
-                         {
-                            new Claim(JwtClaimTypes.Name, "Stepan Klem"),
-                            new Claim(JwtClaimTypes.GivenName, "Stepan"),
-                            new Claim(JwtClaimTypes.FamilyName, "Klem"),
-                            new Claim(JwtClaimTypes.WebSite, "http://stepanklem.com"),
-                            new Claim("location", "Ukraine")
-                         }
-                     ).Result;
+                // Assign the "Admin" role to the user
+                result = userMgr.AddToRoleAsync(stepan, "Admin").Result; // Ensure this matches the role name created
 
                 if (!result.Succeeded)
                 {
-                    throw new Exception(result.Errors.First().Description);
+                    throw new Exception($"Failed to assign role: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+
+                result = userMgr.AddClaimsAsync(
+                    stepan,
+                    new Claim[]
+                    {
+                new Claim(JwtClaimTypes.Name, "Stepan Klem"),
+                new Claim(JwtClaimTypes.GivenName, "Stepan"),
+                new Claim(JwtClaimTypes.FamilyName, "Klem"),
+                new Claim("location", "Ukraine")
+                    }
+                ).Result;
+
+                if (!result.Succeeded)
+                {
+                    throw new Exception($"Failed to add claims: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+            }
+            else
+            {
+                // If user already exists, you might want to check if they have the Admin role
+                var isInRole = userMgr.IsInRoleAsync(stepan, "Admin").Result;
+                if (!isInRole)
+                {
+                    var result = userMgr.AddToRoleAsync(stepan, "Admin").Result;
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception($"Failed to assign role to existing user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    }
                 }
             }
         }
+
 
         private static void EnsureSeedData(ConfigurationDbContext context)
         {
@@ -133,6 +168,25 @@ namespace IdentityServer
                 }
 
                 context.SaveChanges();
+            }
+        }
+
+        private static void EnsureRoles(IServiceScope scope)
+        {
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            string[] roleNames = { "Admin", "User" }; // Keep the names consistent
+            IdentityResult roleResult;
+
+            foreach (var roleName in roleNames)
+            {
+                var roleExist = roleManager.RoleExistsAsync(roleName).Result; // Check if role exists
+
+                if (!roleExist)
+                {
+                    // Create the roles and seed them to the database
+                    roleResult = roleManager.CreateAsync(new IdentityRole(roleName)).Result;
+                }
             }
         }
     }
