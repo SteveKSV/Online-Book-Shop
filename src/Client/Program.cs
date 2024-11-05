@@ -1,87 +1,70 @@
+using Client;
+using Client.Areas.Identity;
+using Client.Data;
 using Client.Services;
 using Client.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+var envType = Environment.GetEnvironmentVariable("ENV_TYPE");
+var isDocker = envType == "Docker";
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Check if running in Docker or local
-var envType = Environment.GetEnvironmentVariable("ENV_TYPE");
-var configFileName = envType == "Docker" ? "appsettings.docker.json" : "appsettings.json";
+if (isDocker)
+{
+    builder.Configuration.AddJsonFile("appsettings.docker.json", optional: false, reloadOnChange: true);
+}
 
-// Load the configuration file based on environment
-builder.Configuration.AddJsonFile(configFileName, optional: false, reloadOnChange: true);
+string? connectionString;
+if (isDocker)
+{
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+    var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+    var dbPassword = Environment.GetEnvironmentVariable("DB_SA_PASSWORD") ?? "YourDefaultPassword";
+
+    connectionString = $"Server={dbHost};Database={dbName};User Id=sa;Password={dbPassword};TrustServerCertificate=True;Encrypt=False;";
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+}
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddSignInManager()
+    .AddDefaultTokenProviders(); ;
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
-//////////////////////// HTTP CLIENT CONFIGURATION ///////////////////////////////
+builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddHttpClient();
-
-//////////////////////// IDENTITY-SERVER-SETTINGS CONFIGURATION ///////////////////////////////
-builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection("IdentityServerSettings"));
-
-//////////////////////// DI-SERVICES CONFIGURATION ///////////////////////////////
-builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICatalogService, CatalogService>();
 builder.Services.AddScoped<IShoppingCartService, ShoppingCartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
-builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-
-//////////////////////// AUTHENTICATION CONFIGURATION ///////////////////////////////
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-})
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
-.AddOpenIdConnect(
-    OpenIdConnectDefaults.AuthenticationScheme,
-    options =>
-    {
-        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.SignOutScheme = OpenIdConnectDefaults.AuthenticationScheme;
-        options.Authority = builder.Configuration["InteractiveServiceSettings:AuthorityUrl"];
-        options.ClientId = builder.Configuration["InteractiveServiceSettings:ClientId"];
-        options.ClientSecret = builder.Configuration["InteractiveServiceSettings:ClientSecret"];
-        options.ResponseType = "code";
-        options.SaveTokens = true;
-        options.GetClaimsFromUserInfoEndpoint = true;
-
-        // Check if running in Docker and set RequireHttpsMetadata accordingly
-        var isDocker = envType == "Docker";
-        options.RequireHttpsMetadata = !isDocker;
-
-        options.ClaimActions.Remove("email");
-    }
-);
-
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("ApiScope", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-        policy.RequireClaim("scope", "Catalog.read");
-    });
-});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
 {
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-if (envType != "Docker")
-{
-    app.UseHttpsRedirection();
-}
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
@@ -90,7 +73,16 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.EnsureCreatedAsync();
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
+}
 
 app.Run();

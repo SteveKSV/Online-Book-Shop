@@ -5,15 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 using Ocelot.Values;
 
 var builder = WebApplication.CreateBuilder();
-//builder.Services.AddAuthentication()
-//    .AddJwtBearer("IdentityApiKey", x =>
-//    {
-//        x.Authority = "https://localhost:5006"; // IDENTITY SERVER URL
-//        x.TokenValidationParameters = new TokenValidationParameters
-//        {
-//            ValidateAudience = false
-//        };
-//    });
 
 var envVariable = Environment.GetEnvironmentVariable("ENVIRONMENT");
 if (envVariable == "Docker")

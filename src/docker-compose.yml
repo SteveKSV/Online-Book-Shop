@@ -60,17 +60,17 @@ services:
         - orderdb_data:/var/opt/mssql
 
   identitydb:
-    container_name: identitydb
+    container_name: identity-db
     image: mcr.microsoft.com/mssql/server:2019-latest
-    ports:
-      - "1435:1433"
+    ports: 
+        - 1435:1433
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=Q1w2E3r4$
+        - ACCEPT_EULA=Y
+        - MSSQL_SA_PASSWORD=Q1w2E3r4$ 
     networks:
-      - bookapp
+        - bookapp
     volumes:
-      - identitydb_data:/var/opt/mssql
+        - identitydb_data:/var/opt/mssql
 
   catalog:
     image: ${DOCKER_REGISTRY-}catalog
@@ -164,46 +164,32 @@ services:
       - bookapp
     volumes:
       - ./ApiGateways/OcelotApiGw/ocelot.docker.json:/app/ocelot.docker.json
-    
-  identityserver:
-    container_name: auth-server
-    image: ${DOCKER_REGISTRY-}identityserver
-    build:
-      context: .
-      dockerfile: IdentityServer/Dockerfile
-    ports: 
-      - "8006:80"
-    environment:
-      - DB_TYPE=Docker
-      - DB_HOST=identitydb
-      - DB_NAME=IdentityServerDb
-      - DB_SA_PASSWORD=Q1w2E3r4$ 
-    depends_on:
-      - identitydb
-    networks: 
-      - bookapp
-
+  
   client:
-    container_name: blazor-app
+    container_name: client-app
     image: ${DOCKER_REGISTRY-}client
     build:
       context: .
       dockerfile: Client/Dockerfile
     ports:
-      - "8007:80"
+      - "8006:80"
     environment:
       - ENV_TYPE=Docker
-    depends_on:
-      - identityserver
-      - ocelotapigw
-    networks:
+      - DB_HOST=identitydb
+      - DB_NAME=IdentityAuthDb
+      - DB_SA_PASSWORD=Q1w2E3r4$ 
+    networks: 
       - bookapp
+    depends_on: 
+      - ocelotapigw
+      - identitydb
 
 volumes:
   mongo_data:
   # discountdb_data:
   orderdb_data:
   identitydb_data:
+
 
 
 

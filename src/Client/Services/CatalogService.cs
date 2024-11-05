@@ -9,12 +9,10 @@ namespace Client.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly ITokenService _tokenService;
-        public CatalogService(HttpClient httpClient, IConfiguration configuration, ITokenService tokenService)
+        public CatalogService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _configuration = configuration;
-            _tokenService = tokenService;
         }
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
@@ -54,8 +52,6 @@ namespace Client.Services
             return entities;
 
         }
-
-
         private PaginationMetadata ParsePaginationMetadata(HttpResponseHeaders headers)
         {
             PaginationMetadata metadata = new PaginationMetadata();

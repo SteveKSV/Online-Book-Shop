@@ -14,14 +14,15 @@
     </div>
 
     <main>
-        <div class="top-row px-4 auth">
+        <div class="top-row">
             <div class="welcome-message">
-                @if (UserIsAuthenticated)
-                {
-                    <span>Welcome,</span> <a href="/profile" class="profile-link">@UserName!</a>
-                }
+                <AuthorizeView>
+                    <Authorized>
+                        <a href="/Identity/Account/Manage">@context.User.Identity?.Name!</a> 
+                    </Authorized>
+                </AuthorizeView>
             </div>
-            <div>
+            <div class="d-flex align-items-center">
                 <a href="cart" class="ms-3">
                     <span class="oi oi-cart"></span>
                     Cart @if (ItemCount > 0)
@@ -31,11 +32,13 @@
                 </a>
                 <AuthorizeView>
                     <Authorized>
-                        <a href="logout" class="btn btn-link">Logout</a>
+                        <form method="post" action="Identity/Account/LogOut" class="d-inline">
+                            <button type="submit" class="nav-link btn btn-link">Log out</button>
+                        </form>
                     </Authorized>
                     <NotAuthorized>
-                        <a href="login" class="btn btn-link">Login</a>
-                        <a href="register" class="btn btn-link">Register</a>
+                        <a href="Identity/Account/Register" class="ms-3">Register</a>
+                        <a href="Identity/Account/Login" class="ms-3">Log in</a>
                     </NotAuthorized>
                 </AuthorizeView>
             </div>
@@ -48,9 +51,6 @@
 </div>
 
 @code {
-    private bool UserIsAuthenticated => authenticationState.User.Identity.IsAuthenticated;
-    private string UserName => ShoppingCartService.GetUserNameFromClaims(authenticationState.User);
-
     [Inject] public IShoppingCartService ShoppingCartService { get; set; }
     public int ItemCount { get; set; }
 
