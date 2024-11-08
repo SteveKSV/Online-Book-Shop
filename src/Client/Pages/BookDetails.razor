@@ -5,45 +5,27 @@
 @if (Book != null)
 {
     <div class="d-flex flex-row">
-        <h1>@Book.Title</h1>
-        <button type="button" class="btn btn-lg btn-outline-primary ms-2" @onclick="() => AddToCart(Book)">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 me-1" viewBox="0 0 16 16">
-                <path d="M1 0.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .485.379l.825 3.3 1.871 7.484a.5.5 0 0 0 .485.384h6.086a.5.5 0 0 0 .485-.384l1.87-7.484.826-3.3a.5.5 0 0 1 .485-.38h1a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 14.5 12H4.95a.5.5 0 0 1-.477-.342l-2-8a.5.5 0 0 1 .477-.658h1.01a.5.5 0 0 1 .485.38l.247 1.004h7.527l-.51-2.04H3.165L2.655 1.5h10.032l.247 1.004h1.01a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 12.5 12H3.001a.5.5 0 0 1-.477-.342l-2-8A.5.5 0 0 1 1 3.5h.182L1 0.5zM14.5 13a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
-            </svg>
-            Buy
-        </button>
+        <h1 class="text-center">@Book.Title</h1>
     </div>
-    
+    <button type="button" class="btn btn-lg btn-outline-primary ms-2" @onclick="() => AddToCart(Book)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart3 me-1" viewBox="0 0 16 16">
+            <path d="M1 0.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .485.379l.825 3.3 1.871 7.484a.5.5 0 0 0 .485.384h6.086a.5.5 0 0 0 .485-.384l1.87-7.484.826-3.3a.5.5 0 0 1 .485-.38h1a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 14.5 12H4.95a.5.5 0 0 1-.477-.342l-2-8a.5.5 0 0 1 .477-.658h1.01a.5.5 0 0 1 .485.38l.247 1.004h7.527l-.51-2.04H3.165L2.655 1.5h10.032l.247 1.004h1.01a.5.5 0 0 1 .478.658l-2 8A.5.5 0 0 1 12.5 12H3.001a.5.5 0 0 1-.477-.342l-2-8A.5.5 0 0 1 1 3.5h.182L1 0.5zM14.5 13a1.5 1.5 0 0 0 0 3 1.5 1.5 0 0 0 0-3z" />
+        </svg>
+        Buy
+    </button>
+    <br/><br/><br/>
     <article>
         <div class="book-cover">
-            
             <img src="@Book.Image" alt="Book Image Here" />
         </div>
         <section>
-            <p>Author: @Book.AuthorName</p>
-            <p>Genre:
-                @foreach (var genre in Book.Genre)
-                {
-                    <span>@genre; </span>
-                }
-             </p>
-
+            <p>Author: @Book.Authors</p>
+            <p>Genre: @Book.Genres</p>
             <p>Description: @Book.Description</p>
-
-            <p>Price: @Book.Price</p>
-            <p>Publisher: @Book.PublisherName</p>
-            <p>Publication Date:
-                @Book.PublicationDate.Day.@if (@Book.PublicationDate.Month < 10)
-                {
-                    <span>0</span><span>@Book.PublicationDate.Month.</span>
-                }
-                else
-                {
-                    <span>@Book.PublicationDate.Month.</span>
-                }
-                @Book.PublicationDate.Year</p>
-            <p>Pages: @Book.NumberOfPages</p>
-
+            <p>Price: $@String.Format("{0:F3}", Book.Price)</p>
+            <p>Publisher: @Book.Publisher</p>
+            <p>Publication Date: @Book.PublicationDate.ToString("dd/MM/yyyy")</p>
+            <p>Ratings Count: @Book.RatingsCount</p> 
             <div class="reviews">
                 <p>There are no reviews now.</p>
             </div>

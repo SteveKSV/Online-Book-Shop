@@ -3,6 +3,10 @@ using Catalog.Helpers;
 using Catalog.Managers.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Catalog.Managers
 {
@@ -11,9 +15,10 @@ namespace Catalog.Managers
         public BookManager(MongoDbContext context) : base(context)
         {
         }
+
         public async Task<PagedList<Book?>> GetBooks(
             PaginationParams? paginationParams, string? title, string? sortOrder,
-            List<string>? genres, List<string>? languages)
+            string genre)
         {
             var filterBuilder = new FilterDefinitionBuilder<Book>();
             var filter = filterBuilder.Empty;
@@ -24,16 +29,10 @@ namespace Catalog.Managers
                 filter &= filterBuilder.Regex(x => x.Title, new BsonRegularExpression(title, "i"));
             }
 
-            // Filter for genres
-            if (genres != null && genres.Any())
+            // Filter by genre if provided
+            if (!string.IsNullOrEmpty(genre))
             {
-                filter &= filterBuilder.AnyIn(x => x.Genre, genres); // Use AnyIn for genre list
-            }
-
-            // Filter for languages
-            if (languages != null && languages.Any())
-            {
-                filter &= filterBuilder.In(x => x.LanguageName, languages); // Use In for single value
+                filter &= filterBuilder.Regex(x => x.genres, new BsonRegularExpression(genre, "i"));
             }
 
             // Create the query with the filter
@@ -54,8 +53,6 @@ namespace Catalog.Managers
                             break;
                         case "desc":
                             query = query.SortByDescending(book => book.Price);
-                            break;
-                        case "none":
                             break;
                     }
                 }
@@ -88,6 +85,5 @@ namespace Catalog.Managers
                            .Find(p => p.Id == id)
                            .FirstOrDefaultAsync();
         }
-
     }
 }

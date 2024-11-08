@@ -18,10 +18,24 @@
             <div class="welcome-message">
                 <AuthorizeView>
                     <Authorized>
-                        <a href="/Identity/Account/Manage">@context.User.Identity?.Name!</a> 
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <a href="/Identity/Account/Manage" class="text-decoration-none">Hello, @context.User.Identity?.Name!</a>
+                                @if (context.User.IsInRole("Administrator"))
+                                {
+                                    <span class="badge bg-primary ms-2">Administrator</span>
+                                }
+                                else if (context.User.IsInRole("User"))
+                                {
+                                    <span class="badge bg-secondary ms-2">User</span>
+                                }
+                            </div>
+                        </div>
                     </Authorized>
                 </AuthorizeView>
             </div>
+
             <div class="d-flex align-items-center">
                 <a href="cart" class="ms-3">
                     <span class="oi oi-cart"></span>

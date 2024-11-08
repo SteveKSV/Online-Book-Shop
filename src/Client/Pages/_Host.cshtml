@@ -13,4 +13,18 @@
             checkbox.checked = false;
         });
     };
+
+    function resetRadioButtons() {
+        // Reset sort price radio buttons
+        const sortPriceRadios = document.getElementsByName('sortPrice');
+        sortPriceRadios.forEach(radio => {
+            radio.checked = radio.value === 'none'; // Set 'Default' to checked
+        });
+
+        // Reset genre filter radio buttons
+        const genreFilterRadios = document.getElementsByName('genreFilter');
+        genreFilterRadios.forEach(radio => {
+            radio.checked = radio.value === ''; // Set 'All Genres' to checked
+        });
+    }
 </script>

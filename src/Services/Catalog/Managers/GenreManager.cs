@@ -13,7 +13,7 @@ namespace Catalog.Managers
         public async Task<IEnumerable<string>> GetAllGenres()
         {
             // Use the Distinct method to get unique genres from all documents
-            var genres = await _collection.Distinct<string>("Genre", FilterDefinition<Book>.Empty).ToListAsync();
+            var genres = await _collection.Distinct<string>("genres", FilterDefinition<Book>.Empty).ToListAsync();
 
             // Split each genre string by comma, filter out empty strings, and flatten the list
             var allGenres = genres

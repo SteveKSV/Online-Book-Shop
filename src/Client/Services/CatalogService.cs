@@ -16,14 +16,9 @@ namespace Client.Services
         }
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
-            //// Отримання токену доступу
-            //var token = await _tokenService.GetToken("Catalog.read");
 
             // Створення HTTP запиту
             var request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
-
-            //Встановлення заголовка авторизації з використанням токену
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
             // Виконання запиту
             var response = await _httpClient.SendAsync(request);
@@ -37,7 +32,6 @@ namespace Client.Services
             var paginationMetadata = ParsePaginationMetadata(response.Headers);
 
             return (books, paginationMetadata);
-
         }
 
         public async Task<List<string>> Get(string queryString = null)

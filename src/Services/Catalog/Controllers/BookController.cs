@@ -23,11 +23,10 @@ namespace Catalog.Controllers
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
             [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
-            [FromQuery] List<string>? genres = null,
-            [FromQuery] List<string>? languages = null
+            [FromQuery] string? genre = null
             )
         {
-            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genres, languages);
+            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genre);
             var metadata = new
             {
                 products.TotalCount,

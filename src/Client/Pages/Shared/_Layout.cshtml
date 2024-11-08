@@ -54,20 +54,6 @@
         <main role="main" class="pb-1">
             @RenderBody()
         </main>
-    </div>
-    <footer class="footer border-top pl-3 text-muted">
-        <div class="container">
-        &copy; 2024 - Client
-            @{
-                var foundPrivacy = Url.Page("/Privacy", new { area = "" });
-            }
-            @if (foundPrivacy != null)
-            {
-                <a asp-area="" asp-page="/Privacy">Privacy</a>
-            }
-        </div>
-    </footer>
-
     <environment include="Development">
         <script src="~/Identity/lib/jquery/dist/jquery.js"></script>
         <script src="~/Identity/lib/bootstrap/dist/js/bootstrap.bundle.js"></script>

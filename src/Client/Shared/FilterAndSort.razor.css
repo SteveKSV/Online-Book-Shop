@@ -7,6 +7,17 @@ h7 {
     font-weight: bold;
 }
 
+.genre-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping to the next line */
+}
+
+.genre-item {
+    width: 50%; /* Each item takes up half the container's width */
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width */
+}
+
+
 @media (min-width: 768px) and (max-width: 992px) {
     .scrollable-panel {
         position: static;
