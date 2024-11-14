@@ -3,6 +3,7 @@ import joblib
 from pymongo import MongoClient
 from bson import ObjectId
 import numpy as np
+from scipy.stats import entropy
 
 app = Flask(__name__)
 
@@ -32,7 +33,7 @@ def predict_genres(description):
     
     return sorted_genres  # Return as a dictionary
 
-def ratio_confidence_sampling(model, books, n_samples):
+def uncertainty_sampling(model, books, n_samples):
     # Векторизація описів книг
     descriptions = [book['description'] for book in books]
     description_vectorized = vectorizer.transform(descriptions)
@@ -40,18 +41,17 @@ def ratio_confidence_sampling(model, books, n_samples):
     # Отримуємо ймовірності для кожної книги
     probs = model.predict_proba(description_vectorized)
     
-    # Обчислюємо невизначеність
+    # Обчислюємо невизначеність на основі ентропії
     uncertainty_values = []
     
     for prob in probs:
-        # Сортуємо ймовірності для кожної книги
-        sorted_probs = np.sort(prob)
-        
-        # Різниця між найбільшими ймовірностями
-        confidence_diff = sorted_probs[-1] - sorted_probs[-2] if len(sorted_probs) > 1 else 0
-        
-        # Інвертована невизначеність: чим менша різниця, тим вища невизначеність
-        uncertainty = round(1 / (confidence_diff + 1e-10) * 100, 2)  # Додаємо малий зсув і множимо на 100 для відсотків
+        # Обчислюємо ентропію як міру невизначеності
+        entropy_value = entropy(prob)
+        max_entropy = np.log(len(prob))  # Максимальна ентропія для кількості класів
+
+        # Нормалізація ентропії для діапазону [0%, 100%]
+        uncertainty = round((entropy_value / max_entropy) * 100, 2)
+
         uncertainty_values.append(uncertainty)
     
     # Сортуємо книги за невизначеністю (найвища невизначеність буде в кінці списку)
@@ -72,7 +72,7 @@ def get_books_with_predictions():
     books = list(warehouse_collection.find().skip(skip).limit(limit))
     
     # Get the most uncertain books
-    uncertain_books = ratio_confidence_sampling(model, books, n_samples=limit)
+    uncertain_books = uncertainty_sampling(model, books, n_samples=limit)
 
     # Create a list of books with predictions and uncertainty
     books_with_predictions = []
@@ -81,10 +81,12 @@ def get_books_with_predictions():
         
         predictions_list = [{"Name": genre, "Probability": prob} for genre, prob in predictions.items()]
         
-        # Calculate uncertainty based on the ratio of confidence between the highest and second highest probabilities
-        sorted_probs = np.sort(list(predictions.values()))
-        confidence_diff = sorted_probs[-1] - sorted_probs[-2] if len(sorted_probs) > 1 else 0
-        uncertainty = round(1 / (confidence_diff + 1e-10) * 100, 2)  # Перетворюємо на відсотки
+        # Отримуємо ентропію як міру невизначеності
+        entropy_value = entropy(list(predictions.values()))
+        max_entropy = np.log(len(predictions))  # Максимальна ентропія для кількості класів
+
+        # Нормалізація ентропії для діапазону [0%, 100%]
+        uncertainty = round((entropy_value / max_entropy) * 100, 2)
         
         books_with_predictions.append({
             "Id": str(book['_id']),
