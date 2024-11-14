@@ -4,62 +4,54 @@
 
 <div>
     <div class="d-flex flex-column flex-md-row flex-sm-column align-content-sm-center justify-content-around mb-medium">
-            <div>
-                <h7>Sort by Price:</h7>
+        <div>
+            <h7>Sort by Price:</h7>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none" checked @onclick='() => SortByPrice("none")'>
+                <label class="form-check-label" for="sortPriceDefault">
+                    Default
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" @onclick='() => SortByPrice("asc")'>
+                <label class="form-check-label" for="sortPriceAsc">
+                    Low to High
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDesc" value="desc" @onclick='() => SortByPrice("desc")'>
+                <label class="form-check-label" for="sortPriceDesc">
+                    High to Low
+                </label>
+            </div>
+        </div>
+        <div>
+            <h7 class="mt-4 mt-md-0 mt-sm-0">Filter by Genre:</h7>
+            <!-- Radio button for no genre selection -->
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="genreFilter" id="genreAll" value="" @onclick="() => UpdateFilteredBooksByGenre(null)" checked>
+                <label class="form-check-label" for="genreAll">
+                    All Genres
+                </label>
+            </div>
+            <!-- Radio buttons for available genres -->
+            @foreach (var genre in Genres)
+            {
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none" checked @onclick='() => SortByPrice("none")'>
-                    <label class="form-check-label" for="sortPriceDefault">
-                        Default
+                    <input class="form-check-input" type="radio" name="genreFilter" id="@($"genre_{genre}")"
+                           value="@genre" @onclick="() => UpdateFilteredBooksByGenre(genre)">
+                    <label class="form-check-label" for="@($"genre_{genre}")">
+                        @genre
                     </label>
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" @onclick='() => SortByPrice("asc")'>
-                    <label class="form-check-label" for="sortPriceAsc">
-                        Low to High
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDesc" value="desc" @onclick='() => SortByPrice("desc")'>
-                    <label class="form-check-label" for="sortPriceDesc">
-                        High to Low
-                    </label>
-                </div>
-            </div>
-            <div>
-                <h7 class="mt-4 mt-md-0 mt-sm-0">Filter by Genre:</h7>
-                <!-- Checkboxes for genres -->
-                @foreach (var genre in Genres)
-                {
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="@($"chk_{genre}")"
-                               value="@genre" @onchange="(e) => UpdateFilteredBooksByGenre(genre, e)">
-                        <label class="form-check-label" for="@($"chk_{genre}")">
-                            @genre
-                        </label>
-                    </div>
-                }
-            </div>
-            <div>
-                <h7 class="mt-4 mt-md-0 mt-sm-0">Filter by Language:</h7>
-                <!-- Checkboxes for languages -->
-                @foreach (var language in Languages)
-                {
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="@($"chk_{language}")"
-                           value="@language" @onchange="(e) => UpdateFilteredBooksByLanguage(language, e)">
-                         <label class="form-check-label" for="@($"chk_{language}")">
-                            @language
-                        </label>
-                    </div>
-                }
-            </div>
-     </div>
+            }
+        </div>
+    </div>
 
     <div class="text-center">
         <button class="btn btn-secondary mt-3" @onclick="ClearFilters">Clear Filters</button>
     </div>
 </div>
-
 
 @code {
     [Parameter]
@@ -68,22 +60,14 @@
     [Parameter]
     public EventCallback<string?> OnFilterByGenres { get; set; }
 
-    [Parameter]
-    public EventCallback<string?> OnFilterByLanguages { get; set; }
-
     public List<string> Genres { get; set; } = new List<string>();
-    public List<string> Languages { get; set; } = new List<string>();
-
-    private List<string> selectedGenres = new();
-    private List<string> selectedLanguages = new();
 
     [Inject] private ICatalogService Service { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        Genres = await Service.Get("genre");
-        Languages = await Service.Get("language");
-        StateHasChanged();        
+        Genres = (await Service.Get("genre")).OrderBy(g => g).ToList(); // Sort genres alphabetically
+        StateHasChanged();
     }
 
     private async Task SortByPrice(string sortOrder)
@@ -91,59 +75,17 @@
         await OnSort.InvokeAsync(sortOrder);
     }
 
-    private async Task UpdateFilteredBooksByGenre(string selectedGenre, ChangeEventArgs e)
+    private async Task UpdateFilteredBooksByGenre(string? selectedGenre)
     {
-        bool isChecked = (bool)e.Value;
-
-        if (isChecked && !selectedGenres.Contains(selectedGenre))
-        {
-            selectedGenres.Add(selectedGenre);
-        }
-        else if (!isChecked && selectedGenres.Contains(selectedGenre))
-        {
-            selectedGenres.Remove(selectedGenre);
-        }
-
-        string? queryString = null;
-
-        if (selectedGenres.Any())
-        {
-            queryString += "&" + string.Join("&", selectedGenres.Select(g => $"genres={g}"));
-        }
-
+        // Encode the genre to prevent issues with special characters
+        string queryString = selectedGenre != null ? Uri.EscapeDataString(selectedGenre) : null;
         await OnFilterByGenres.InvokeAsync(queryString);
-    }
-
-    private async Task UpdateFilteredBooksByLanguage(string selectedLanguage, ChangeEventArgs e)
-    {
-        bool isChecked = (bool)e.Value;
-
-        if (isChecked && !selectedLanguages.Contains(selectedLanguage))
-        {
-            selectedLanguages.Add(selectedLanguage);
-        }
-        else if (!isChecked && selectedLanguages.Contains(selectedLanguage))
-        {
-            selectedLanguages.Remove(selectedLanguage);
-        }
-
-        string? queryString = null;
-
-        if (selectedLanguages.Any())
-        {
-            queryString += "&" + string.Join("&", selectedLanguages.Select(l => $"languages={l}"));
-        }
-        await OnFilterByLanguages.InvokeAsync(queryString);
     }
 
     private async Task ClearFilters()
     {
-        selectedGenres.Clear();
-        selectedLanguages.Clear();
-
-        await JSRuntime.InvokeAsync<object>("resetCheckboxes", null);
-
-        await OnFilterByGenres.InvokeAsync(null);
-        await OnFilterByLanguages.InvokeAsync(null);
+        await JSRuntime.InvokeAsync<object>("resetRadioButtons", null); // Ensure to reset any radio button states
+        await OnFilterByGenres.InvokeAsync("clear");
     }
 }
+

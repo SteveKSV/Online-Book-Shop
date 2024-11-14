@@ -8,6 +8,21 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//////////////////////// CONFIGURE ENVIRONMENT VARIABLES ///////////////////////////////
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+
+// Use Docker environment variables if in Docker, otherwise default to appsettings.json values
+var eventBusHost = environment == "Docker"
+    ? Environment.GetEnvironmentVariable("EventBusSettings__HostAddress")
+    : builder.Configuration.GetValue<string>("EventBusSettings:HostAddress");
+
+var redisConnectionString = environment == "Docker"
+    ? Environment.GetEnvironmentVariable("CacheSettings__ConnectionString")
+    : builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
+
+var discountGrpcConnection = environment == "Docker"
+    ? Environment.GetEnvironmentVariable("DiscountGrpcConnection__ConnectionString")
+    : builder.Configuration.GetValue<string>("DiscountGrpcConnection:ConnectionString");
 
 //////////////////////// CONTROLLERS CONFIGURATION ///////////////////////////////
 builder.Services.AddControllers();
@@ -15,8 +30,9 @@ builder.Services.AddControllers();
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
 builder.Services.AddStackExchangeRedisCache(options =>
 {
-    options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
+    options.Configuration = redisConnectionString;
 });
+
 builder.Services.AddScoped<IBasketManager, BasketManager>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
@@ -27,19 +43,17 @@ builder.Services.AddMassTransit(x =>
     x.SetKebabCaseEndpointNameFormatter();
     x.UsingRabbitMq((context, cfg) =>
     {
-        cfg.Host(new Uri(builder.Configuration.GetValue<string>("EventBusSettings:HostAddress")));
+        cfg.Host(new Uri(eventBusHost));
         cfg.ConfigureEndpoints(context);
     });
 });
 
-
 //////////////////////// DISCOUNT gRPC CONFIGURATION ///////////////////////////////
-string connStr = builder.Configuration.GetValue<string>("DiscountGrpcConnection:ConnectionString");
-
 builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(options =>
 {
-    options.Address = new Uri(connStr);
+    options.Address = new Uri(discountGrpcConnection);
 });
+
 builder.Services.AddScoped<DiscountGrpcService>();
 
 //////////////////////// SWAGGER CONFIGURATION ///////////////////////////////

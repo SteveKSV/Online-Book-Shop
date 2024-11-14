@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using System.Collections.Generic;
 
 namespace Catalog.Entities
 {
@@ -7,36 +8,40 @@ namespace Catalog.Entities
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
         [BsonElement("Title")]
         public string Title { get; set; }
 
-        [BsonElement("Description")]
-        public string Description { get; set; }
+        [BsonElement("description")] 
+        public string description { get; set; }
 
-        [BsonElement("Genre")]
-        public List<string> Genre { get; set; }
+        [BsonElement("authors")]
+        public string authors { get; set; }
+
+        [BsonElement("image")]
+        public string image { get; set; }
+
+        [BsonElement("previewLink")]
+        public string previewLink { get; set; }
+
+        [BsonElement("publisher")]
+        public string publisher { get; set; }
+
+        [BsonElement("publishedDate")]
+        public DateTime publishedDate { get; set; }
+
+        [BsonElement("infoLink")]
+        public string infoLink { get; set; }
+
+        [BsonElement("genres")]
+        public string genres { get; set; }
+
+        [BsonElement("ratingsCount")]
+        public double ratingsCount { get; set; }
 
         [BsonElement("Price")]
         public decimal Price { get; set; }
-
-        [BsonElement("NumberOfPages")]
-        public int NumberOfPages { get; set; }
-
-        [BsonElement("PublicationDate")]
-        public DateTime PublicationDate { get; set; }
-
-        [BsonElement("LanguageName")]
-        public string LanguageName { get; set; }
-
-        [BsonElement("PublisherName")]
-        public string PublisherName { get; set; }
-
-        [BsonElement("AuthorName")]
-        public string AuthorName { get; set; }
-
-        [BsonElement("Image")]
-        public string Image { get; set; }
     }
+
 }

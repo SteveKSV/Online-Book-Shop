@@ -9,56 +9,43 @@ namespace Client.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly ITokenService _tokenService;
-        public CatalogService(HttpClient httpClient, IConfiguration configuration, ITokenService tokenService)
+        public CatalogService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _configuration = configuration;
-            _tokenService = tokenService;
         }
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
-            //// Отримання токену доступу
-            //var token = await _tokenService.GetToken("Catalog.read");
 
             // Створення HTTP запиту
             var request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
 
-            //Встановлення заголовка авторизації з використанням токену
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
-
             // Виконання запиту
             var response = await _httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
-            {
-                // Retrieve books from response body
-                var books = await response.Content.ReadFromJsonAsync<List<BookModel>>();
+            
+            if (!response.IsSuccessStatusCode) return (null, null);
 
-                // Retrieve pagination metadata from response headers
-                var paginationMetadata = ParsePaginationMetadata(response.Headers);
+            // Retrieve books from response body
+            var books = await response.Content.ReadFromJsonAsync<List<BookModel>>();
 
-                return (books, paginationMetadata);
-            }
+            // Retrieve pagination metadata from response headers
+            var paginationMetadata = ParsePaginationMetadata(response.Headers);
 
-            return (null, null);
+            return (books, paginationMetadata);
         }
 
         public async Task<List<string>> Get(string queryString = null)
         {
             var response = await _httpClient.GetAsync($"{_configuration.GetSection("apiUrl").Value}/{queryString}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                // Retrieve entities from response body
-                var entities = await response.Content.ReadFromJsonAsync<List<string>>();
+            if (!response.IsSuccessStatusCode) return null;
 
-                return entities;
-            }
+            // Retrieve entities from response body
+            var entities = await response.Content.ReadFromJsonAsync<List<string>>();
 
-            return null;
+            return entities;
+
         }
-
-
         private PaginationMetadata ParsePaginationMetadata(HttpResponseHeaders headers)
         {
             PaginationMetadata metadata = new PaginationMetadata();

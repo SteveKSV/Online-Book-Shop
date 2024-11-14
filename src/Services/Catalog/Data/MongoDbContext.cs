@@ -2,7 +2,6 @@
 using Catalog;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Catalog.Data;
 
 public class MongoDbContext
 {
@@ -16,8 +15,6 @@ public class MongoDbContext
 
         // Get the actual collection
         _booksCollection = _database.GetCollection<Book>("book");
-
-        CatalogContextSeed.SeedData(_booksCollection);
     }
 
     public IMongoDatabase Database => _database;

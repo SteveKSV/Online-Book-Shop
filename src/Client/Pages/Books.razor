@@ -1,15 +1,20 @@
 ﻿@page "/catalog"
+@using Client.Services.Interfaces
 @using Client.Shared
+@inject NavigationManager Navigation
+@inject IShoppingCartService CartService
+@inject ICatalogService Service
 
 <div class="container">
     <div class="row">
         <div class="col-md-12 scrollable-panel">
-            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre" OnFilterByLanguages="FilterBooksByLanguage"></FilterAndSort>
+            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre"></FilterAndSort>
         </div>
+
         <div class="col-md-9">
             <h1>Books</h1>
 
-           <div class="w-100" style="margin-bottom: 30px">
+            <div class="w-100" style="margin-bottom: 30px">
                 <label class="input-group">
                     <span class="input-group-text" style="cursor: pointer;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -20,75 +25,168 @@
                 </label>
             </div>
 
+            <!-- Pagination Section Below Search -->
+            @if (pagination != null)
+            {
+                <nav aria-label="Page navigation" style="margin-bottom: 20px;">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous button -->
+                        @if (pagination.HasPrevious)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage - 1)" aria-label="Previous">
+                                    &lt;
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Page numbers with ellipsis if necessary -->
+                        @if (pagination.CurrentPage > 2)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(1)">1</a>
+                            </li>
+                            @if (pagination.CurrentPage > 3)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (int i = Math.Max(1, pagination.CurrentPage); i <= Math.Min(pagination.TotalPages, pagination.CurrentPage); i++)
+                        {
+                            <li class="page-item @(i == pagination.CurrentPage ? "active" : "")">
+                                <a class="page-link" @onclick="() => NavigateToPage(i)">@(i)</a>
+                            </li>
+                        }
+
+                        @if (pagination.CurrentPage < pagination.TotalPages - 1)
+                        {
+                            @if (pagination.CurrentPage < pagination.TotalPages - 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.TotalPages)">@pagination.TotalPages</a>
+                            </li>
+                        }
+
+                        <!-- Next button -->
+                        @if (pagination.HasNext)
+                        {
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage + 1)" aria-label="Next">
+                                    &gt;
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+
+            <!-- Books Display Section -->
             <div class="row justify-content-center">
                 @if (books.Any())
                 {
-                        @foreach (var book in books)
-                        {
-                            <a href="/bookdetails/@book.Title" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
-                                <div class="card shadow-sm rounded">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><b>@book.Title</b></h5>
-                                        <p class="card-subtitle mb-2 text-muted text-md-center">@book.AuthorName</p>
-                                          <img src="@book.Image" alt="Book Cover" class="img-fluid">
-                                    </div>
-                                    <div class="mb-2 text-center">
-                                        <a href="/reviews" class="text-decoration-none align-bottom">
+                    @foreach (var book in books)
+                    {
+                        <a href="/bookdetails/@book.Title" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
+                            <div class="card shadow-sm rounded">
+                                <div class="card-body">
+                                    <h5 class="card-title"><b>@TruncateTitle(book.Title, 50)</b></h5> <!-- Limit title to 50 characters -->
+                                    <p class="card-subtitle mb-2 text-muted text-md-center">@book.Authors</p>
+                                    <img src="@book.Image" alt="Book Cover" class="img-fluid">
+                                </div>
+                                <div class="mb-2 text-center">
+                                    <a href="/reviews" class="text-decoration-none align-bottom">
                                         <span class="oi oi-comment-square"></span>
-                                            Reviews
-                                        </a>
+                                        Reviews
+                                    </a>
+                                </div>
+                                <div class="card-footer text-muted d-flex justify-content-between flex-column flex-sm-row flex-xs-column">
+                                    <div class="mb-md-0 text-center text-md-left">
+                                        <span>$@($"{book.Price:F3}")</span> <!-- Format price to 3 decimal places -->
                                     </div>
-                                    <div class="card-footer text-muted d-flex justify-content-between flex-column flex-sm-row flex-xs-column">
-                                        <div class="mb-md-0 text-center text-md-left">
-                                            <span>@($"${book.Price}")</span>
-                                        </div>
-
-                                        <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row ">
+                                    <div class="mb-md-0 text-center text-md-left">
+                                        <span>Rating: @($"{book.RatingsCount}")</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row">
                                         <form @onclick:preventDefault @onsubmit:stopPropagation>
                                             <button type="button" class="btn btn-primary btn-sm ms-2" @onclick="() => AddToCart(book)">
                                                 <span class="oi oi-cart"></span>
                                                 Buy
                                             </button>
                                         </form>
-                                        
-                                        </div>
                                     </div>
                                 </div>
-                            </a>
-                        }
+                            </div>
+                        </a>
+                    }
                 }
                 else
                 {
-                  <p>No books available</p>
+                    <p>No books available</p>
                 }
-                   
             </div>
+
+            <!-- Pagination again at the bottom (optional) -->
             @if (pagination != null)
             {
                 <nav aria-label="Page navigation">
-                    <ul class="pagination">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous button -->
                         @if (pagination.HasPrevious)
                         {
                             <li class="page-item">
-                                <a class="page-link" @onclick="async () => await LoadBooks(pagination.CurrentPage - 1)" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage - 1)" aria-label="Previous">
+                                    &lt;
                                 </a>
                             </li>
                         }
 
-                        @for (int i = 1; i <= pagination.TotalPages; i++)
+                        <!-- Page numbers with ellipsis if necessary -->
+                        @if (pagination.CurrentPage > 2)
                         {
-                            var currentPage = i;
-                            <li class="page-item @(currentPage == pagination.CurrentPage ? "active" : "")">
-                                <a class="page-link" @onclick="async () => await LoadBooks(currentPage)" style="cursor: pointer;">@currentPage</a>
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(1)">1</a>
+                            </li>
+                            @if (pagination.CurrentPage > 3)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                        }
+
+                        @for (int i = Math.Max(1, pagination.CurrentPage); i <= Math.Min(pagination.TotalPages, pagination.CurrentPage); i++)
+                        {
+                            <li class="page-item @(i == pagination.CurrentPage ? "active" : "")">
+                                <a class="page-link" @onclick="() => NavigateToPage(i)">@(i)</a>
                             </li>
                         }
 
+                        @if (pagination.CurrentPage < pagination.TotalPages - 1)
+                        {
+                            @if (pagination.CurrentPage < pagination.TotalPages - 2)
+                            {
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            }
+                            <li class="page-item">
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.TotalPages)">@pagination.TotalPages</a>
+                            </li>
+                        }
+
+                        <!-- Next button -->
                         @if (pagination.HasNext)
                         {
                             <li class="page-item">
-                                <a class="page-link" @onclick="async () => await LoadBooks(pagination.CurrentPage + 1)" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
+                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage + 1)" aria-label="Next">
+                                    &gt;
                                 </a>
                             </li>
                         }

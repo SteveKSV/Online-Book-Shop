@@ -1,9 +1,6 @@
 ﻿using Client.Models;
 using Client.Services.Interfaces;
-using IdentityModel.Client;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-
 
 namespace Client.Pages
 {
@@ -15,15 +12,11 @@ namespace Client.Pages
         private BookModel Book { get; set; }
         [Inject] private HttpClient HttpClient { get; set; }
         [Inject] private IConfiguration Config { get; set; }
-        [Inject] private ITokenService TokenService { get; set; }
         [Inject] private NavigationManager NavigationManager { get; set; }
         [Inject] private IShoppingCartService CartService { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            var tokenResponse = await TokenService.GetToken("Catalog.read");
-
-            HttpClient.SetBearerToken(tokenResponse.AccessToken);
 
             var result = await HttpClient.GetAsync(Config["apiUrl"] + $"/catalog/GetBookByTitle/{bookTitle}");
 

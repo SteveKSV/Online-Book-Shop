@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "catalog": "StartDebugging",
+        "basket": "StartDebugging",
+        "discount.grpc": "StartDebugging",
+        "order": "StartDebugging",
+        "ocelotapigw": "StartDebugging",
+        "identityserver": "StartDebugging",
+        "client": "StartDebugging"
+      }
+    }
+  }
+}

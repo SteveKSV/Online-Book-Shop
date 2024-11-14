@@ -1,3 +1,4 @@
+using Dapper;
 using Discount.Grpc.Repositories;
 using Discount.Grpc.Repositories.Interfaces;
 using Discount.Grpc.Services;
@@ -9,7 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddGrpc();
 
 //////////////////////// DATABASE CONFIGURATION ///////////////////////////////
-builder.Services.AddScoped((s) => new SqlConnection(builder.Configuration.GetConnectionString("DapperConnection")));
+var connectionString = Environment.GetEnvironmentVariable("DB_TYPE") == "Docker"
+    ? Environment.GetEnvironmentVariable("DISCOUNT_DB_CONNECTION") // Docker SQL Server'    
+    : builder.Configuration.GetConnectionString("DapperConnection"); // Local SQL Server
+
+builder.Services.AddScoped((s) => new SqlConnection(connectionString));
+
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly()); 
 builder.Services.AddScoped<IDbTransaction>(s =>
 {
@@ -20,9 +26,8 @@ builder.Services.AddScoped<IDbTransaction>(s =>
 
 //////////////////////// MANAGER CONFIGURATION ///////////////////////////////
 builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
+
 var app = builder.Build();
-
-
 
 //////////////////////// gRPC CONFIGURATION ///////////////////////////////
 app.MapGrpcService<DiscountService>();

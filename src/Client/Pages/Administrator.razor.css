@@ -1,0 +1,51 @@
+﻿.book-details h3 {
+    color: #333;
+    font-weight: bold;
+}
+
+.book-details p {
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+.alert {
+    margin-top: 20px;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: white;
+    border: 2px solid red; /* Red border */
+    border-radius: 50%; /* Circular button */
+    color: red; /* Red X */
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+    .close-btn:hover {
+        background-color: #f8d7da; /* Light red background on hover */
+    }
+
+.alert {
+    position: relative;
+    padding-right: 40px; /* Add space for the close button */
+}

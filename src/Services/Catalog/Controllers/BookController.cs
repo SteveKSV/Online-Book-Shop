@@ -23,11 +23,10 @@ namespace Catalog.Controllers
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
             [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
-            [FromQuery] List<string>? genres = null,
-            [FromQuery] List<string>? languages = null
+            [FromQuery] string? genre = null
             )
         {
-            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genres, languages);
+            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genre);
             var metadata = new
             {
                 products.TotalCount,
@@ -92,13 +91,13 @@ namespace Catalog.Controllers
             return Ok(await _manager.DeleteEntity(id));
         }
        
-        private string GenerateRandomHexadecimalId()
+        private static string GenerateRandomHexadecimalId()
         {
             // Generate a random 24-digit hexadecimal string
-            Random random = new Random();
-            byte[] buffer = new byte[12];
+            var random = new Random();
+            var buffer = new byte[12];
             random.NextBytes(buffer);
-            string randomHexId = string.Concat(buffer.Select(b => b.ToString("x2")));
+            var randomHexId = string.Concat(buffer.Select(b => b.ToString("x2")));
             return randomHexId;
         }
     }

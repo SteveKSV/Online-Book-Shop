@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/" // Home Page
 @layout MainLayout
 <PageTitle>Home</PageTitle>
 <div class="container">
@@ -18,16 +18,5 @@
                 Start exploring our catalog now by visiting our <a href="catalog">Catalog of Books</a>.
             </p>
         </div>
-        <div class="col-md-4">
-            <!-- Optionally, you can add an image here to make the page more visually appealing -->
-            <!-- <img src="your-image-url" alt="Welcome Image" class="img-fluid"> -->
-        </div>
     </div>
 </div>
-
-@code {
-    protected override void OnInitialized()
-    {
-        StateHasChanged();
-    }
-}
