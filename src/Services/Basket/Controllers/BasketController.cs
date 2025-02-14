@@ -31,6 +31,7 @@ using EventBusMessages.Events;
                 var basket = await _repository.GetBasket(userName);
                 return Ok(basket ?? new ShoppingCart(userName));
             }
+
             [HttpPost]
             [ProducesResponseType(typeof(ShoppingCart), (int)HttpStatusCode.OK)]
             public async Task<ActionResult<ShoppingCart>> UpdateBasket([FromBody] ShoppingCart basket)

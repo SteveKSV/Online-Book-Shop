@@ -1,36 +1,24 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="" style="color: white;">WhatToRead</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="catalog" Match="NavLinkMatch.All">
-                <span class="oi oi-book" aria-hidden="true"></span> Catalog
-            </NavLink>
-        </div>
+﻿@* <div class="@NavMenuCssClass" @onclick="ToggleNavMenu"> *@
+<nav class="d-flex align-items-center gap-3 h-100">
+    <div class="nav-item px-3 d-flex align-items-center h-100 flex-column flex-sm-row">
+        <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="" Match="NavLinkMatch.All">
+            Home
+        </NavLink>
+        <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="catalog" Match="NavLinkMatch.All">
+            Catalog
+        </NavLink>
         <AuthorizeView Roles="Administrator">
             <Authorized>
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="administrator" Match="NavLinkMatch.All">
-                    <span class="oi oi-badge" aria-hidden="true"></span> Admin page
+                <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="administrator" Match="NavLinkMatch.All">
+                    Admin page
                 </NavLink>
-            </div>
             </Authorized>
         </AuthorizeView>
-    </nav>
-</div>
+    </div>
+</nav>
 
+@* </div> *@
+@* 
 @code {
     private bool collapseNavMenu = true;
 
@@ -41,3 +29,4 @@
         collapseNavMenu = !collapseNavMenu;
     }
 }
+ *@

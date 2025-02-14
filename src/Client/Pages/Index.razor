@@ -1,22 +1,45 @@
-﻿@page "/" // Home Page
+﻿@page "/"
 @layout MainLayout
+@inject NavigationManager NavigationManager
+
 <PageTitle>Home</PageTitle>
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h1>Welcome to WhatToRead!</h1>
-            <p>
-                Discover the world of books with us! <b>WhatToRead</b> is your go-to destination for finding your next favorite read. Whether you're a casual reader or a book enthusiast, we have something for everyone.
-            </p>
-            <p>
-                Our collection features a diverse range of genres, from gripping thrillers to heartwarming romance, insightful non-fiction to captivating fantasy. With our carefully curated selection, you're sure to find a book that resonates with you.
-            </p>
-            <p>
-                At <b>WhatToRead</b>, we believe in the power of storytelling to inspire, educate, and entertain. Join our community of book lovers today and embark on an exciting literary journey!
-            </p>
-            <p>
-                Start exploring our catalog now by visiting our <a href="catalog">Catalog of Books</a>.
-            </p>
+<style>
+    .image-container {
+        max-width: 600px; /* Keeps image smaller */
+        max-height: 350px; /* Restricts height to avoid scrolling */
+        overflow: hidden; /* Ensures no extra space */
+    }
+</style>
+
+<main class="d-flex flex-column align-items-md-center justify-content-center container text-center mt-5">
+    <h1 class="text-primary display-4">WhatToRead</h1>
+    <p class="text-muted lead">Discover your next favorite book!</p>
+
+    <!-- Search Bar -->
+    <div class="search-container mt-4">
+        <input type="text" @bind="searchQuery" class="form-control w-50 d-inline" placeholder="Search for books...">
+        <button class="btn btn-primary" @onclick="SearchBooks">Search</button>
+    </div>
+
+    <div class="mt-5 d-flex justify-content-center image-container ">
+        <div class="rounded shadow-lg">
+            <img src="https://orange-publishers.com/wp-content/uploads/2022/02/book-page-1005324.jpg" alt="Books Collection" class="img-fluid rounded shadow-lg">
         </div>
     </div>
-</div>
+</main>
+
+@code {
+    private string searchQuery = "";
+
+    private void SearchBooks()
+    {
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            NavigationManager.NavigateTo($"/catalog?pageSize=9&title={searchQuery}");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/catalog?pageSize=9");
+        }
+    }
+}

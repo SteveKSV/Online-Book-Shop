@@ -2,46 +2,79 @@
 @using Client.Models
 @using Client.Services.Interfaces
 
-<h1>Shopping Cart</h1>
-<div class="table-responsive">
-    @if (Basket.Items.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Change Quantity</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Basket.Items)
-                {
-                    <tr>
-                        <td>@item.ProductName</td>
-                        <td>@item.Quantity</td>
-                        <td>@item.Price</td>
-                        <td>@(item.Price * item.Quantity)</td>
-                         <td>
-                            <input type="number" min="1" value="@item.Quantity" @onchange="async e => await UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))" class="form-control" style="width: 70px;" />
-                        </td>
-                        <td><button class="btn btn-danger" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <div><b>Total Price:</b> @Basket.TotalPrice</div>
-        <hr/>
-        <a href="/checkout" class="btn btn-primary">Checkout</a>
-    }
-    else
-    {
-        <p>Your shopping cart is empty.</p>
-    }
+
+<div class="container py-5">
+    <h1 class="mb-5">Your Shopping Cart</h1>
+    <div class="row">
+        <div class="col-lg-8">
+            @if (Basket.Items.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        @foreach (var item in Basket.Items)
+                        {
+                            <div class="row cart-item mb-3">
+                                <div class="col-md-3">
+                                    <img src="@item.ProductImage" alt="@item.ProductName" class="img-fluid rounded">
+                                </div>
+                                <div class="col-md-5">
+                                    <h5 class="card-title">@item.ProductName</h5>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="input-group justify-content-center">
+                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity - 1)">-</button>
+                                        <input type="text" class="form-control form-control-sm text-center quantity-input" value="@item.Quantity" readonly>
+                                        <button class="btn btn-outline-secondary btn-sm" @onclick="() => UpdateQuantity(item.ProductId, item.Quantity + 1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <p class="fw-bold">$@((item.Price * item.Quantity).ToString("F2"))</p>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => RemoveFromCart(item.ProductId)" title="Remove from Cart">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <hr />
+                        }
+                    </div>
+                </div>
+                <div class="text-start mb-4">
+                    <a href="/" class="btn btn-outline-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+                        </svg>
+                        Continue Shopping
+                    </a>
+                </div>
+            }
+            else
+            {
+                <p>Your shopping cart is empty.</p>
+            }
+        </div>
+        <div class="col-lg-4">
+            <div class="card cart-summary">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Subtotal</span>
+                        <span>$@Basket.TotalPrice.ToString("F2")</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-4">
+                        <strong>Total</strong>
+                        <strong>$@Basket.TotalPrice.ToString("F2")</strong>
+                    </div>
+                    <a href="/checkout" class="btn btn-primary w-100">Proceed to Checkout</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
 @code {
     public ShoppingCart Basket { get; set; } = new ShoppingCart();
     [Inject] public IShoppingCartService Service { get; set; }
@@ -49,25 +82,23 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadBasket();
-
-        StateHasChanged();
     }
 
     protected async Task LoadBasket()
     {
         Basket = await Service.GetCart();
-
     }
+
     private async Task UpdateQuantity(string productId, int newQuantity)
     {
+        if (newQuantity < 1) return;
         Basket = await Service.UpdateItemQuantity(productId, newQuantity);
         await LoadBasket();
     }
+
     private async Task RemoveFromCart(string productId)
     {
         Basket = await Service.RemoveFromCart(productId);
         await LoadBasket();
-        StateHasChanged();
     }
-
 }

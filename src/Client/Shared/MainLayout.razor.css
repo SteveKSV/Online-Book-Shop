@@ -49,6 +49,22 @@ main {
     color: #0056b3;
 }
 
+.nav-link {
+    color: grey;
+}
+
+.nav-link:hover {
+    font-weight: bold;
+    color: white;
+}
+
+.nav-link.active {
+    font-weight: bold;
+    color: #ffc107 !important; 
+    border-bottom: 3px solid #ffc107; 
+    transform: scale(1.1);
+    transition: all 0.3s ease-in-out;
+}
 @media (max-width: 640.98px) {
     .top-row .welcome-message {
         display: none;
@@ -84,5 +100,19 @@ main {
     .top-row, article {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
+    }
+}
+/* On small screens (less than 655px) */
+@media (max-width: 655px) {
+    .navbar-nav .d-flex {
+        flex-direction: column !important; /* Stack the items vertically */
+        gap: 10px; /* Optional: add some space between items */
+    }
+}
+
+/* On larger screens (greater than 655px), keep the links in a row */
+@media (min-width: 656px) {
+    .navbar-nav .d-flex {
+        flex-direction: row !important; /* Keep links in a row for large screens */
     }
 }

@@ -7,7 +7,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-md-12 scrollable-panel">
+        <div class="scrollable-panel">
             <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre"></FilterAndSort>
         </div>
 
@@ -21,71 +21,11 @@
                             <path d="M11.742 9.344a5.5 5.5 0 1 0-1.397 1.398l3.86 3.86a1 1 0 0 0 1.415-1.416l-3.86-3.86zm-.342-3.968a4 4 0 1 1-6.468-1.47A4 4 0 0 1 11.4 5.376z" />
                         </svg>
                     </span>
-                    <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="search-addon" @bind="searchTerm" @oninput="SearchBooks" tabindex="1" autofocus />
+                    <input type="text" class="form-control" placeholder="Search" @bind="searchTerm" @oninput="SearchBooks" tabindex="1" autofocus />
                 </label>
             </div>
 
-            <!-- Pagination Section Below Search -->
-            @if (pagination != null)
-            {
-                <nav aria-label="Page navigation" style="margin-bottom: 20px;">
-                    <ul class="pagination justify-content-center">
-                        <!-- Previous button -->
-                        @if (pagination.HasPrevious)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage - 1)" aria-label="Previous">
-                                    &lt;
-                                </a>
-                            </li>
-                        }
-
-                        <!-- Page numbers with ellipsis if necessary -->
-                        @if (pagination.CurrentPage > 2)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(1)">1</a>
-                            </li>
-                            @if (pagination.CurrentPage > 3)
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            }
-                        }
-
-                        @for (int i = Math.Max(1, pagination.CurrentPage); i <= Math.Min(pagination.TotalPages, pagination.CurrentPage); i++)
-                        {
-                            <li class="page-item @(i == pagination.CurrentPage ? "active" : "")">
-                                <a class="page-link" @onclick="() => NavigateToPage(i)">@(i)</a>
-                            </li>
-                        }
-
-                        @if (pagination.CurrentPage < pagination.TotalPages - 1)
-                        {
-                            @if (pagination.CurrentPage < pagination.TotalPages - 2)
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            }
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.TotalPages)">@pagination.TotalPages</a>
-                            </li>
-                        }
-
-                        <!-- Next button -->
-                        @if (pagination.HasNext)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage + 1)" aria-label="Next">
-                                    &gt;
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </nav>
-            }
+            <Pagination PaginationInfo="pagination" OnPageChanged="NavigateToPage" />
 
             <!-- Books Display Section -->
             <div class="row justify-content-center">
@@ -132,67 +72,8 @@
                 }
             </div>
 
-            <!-- Pagination again at the bottom (optional) -->
-            @if (pagination != null)
-            {
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <!-- Previous button -->
-                        @if (pagination.HasPrevious)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage - 1)" aria-label="Previous">
-                                    &lt;
-                                </a>
-                            </li>
-                        }
+            <Pagination PaginationInfo="pagination" OnPageChanged="NavigateToPage" />
 
-                        <!-- Page numbers with ellipsis if necessary -->
-                        @if (pagination.CurrentPage > 2)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(1)">1</a>
-                            </li>
-                            @if (pagination.CurrentPage > 3)
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            }
-                        }
-
-                        @for (int i = Math.Max(1, pagination.CurrentPage); i <= Math.Min(pagination.TotalPages, pagination.CurrentPage); i++)
-                        {
-                            <li class="page-item @(i == pagination.CurrentPage ? "active" : "")">
-                                <a class="page-link" @onclick="() => NavigateToPage(i)">@(i)</a>
-                            </li>
-                        }
-
-                        @if (pagination.CurrentPage < pagination.TotalPages - 1)
-                        {
-                            @if (pagination.CurrentPage < pagination.TotalPages - 2)
-                            {
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            }
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.TotalPages)">@pagination.TotalPages</a>
-                            </li>
-                        }
-
-                        <!-- Next button -->
-                        @if (pagination.HasNext)
-                        {
-                            <li class="page-item">
-                                <a class="page-link" @onclick="() => NavigateToPage(pagination.CurrentPage + 1)" aria-label="Next">
-                                    &gt;
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </nav>
-            }
         </div>
     </div>
 </div>

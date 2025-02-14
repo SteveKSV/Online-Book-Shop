@@ -11,15 +11,22 @@ namespace Client.Pages
         private string? searchTerm = null;
         private string? sortOrder = null;
         private string? genresQuery = null;
-        private PaginationMetadata pagination;
+        private PaginationMetadata pagination = new PaginationMetadata();
 
         protected override async Task OnParametersSetAsync()
         {
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
             int page = 1;
+
             if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("page", out var pageParam) && int.TryParse(pageParam, out int parsedPage))
             {
                 page = parsedPage;
+            }
+
+            // Extract search term from URL
+            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("title", out var titleParam))
+            {
+                searchTerm = titleParam.ToString();
             }
 
             await LoadBooks(page);
@@ -88,7 +95,8 @@ namespace Client.Pages
             ProductId = book.Id,
             ProductName = book.Title,
             Price = book.Price,
-            Quantity = 1
+            Quantity = 1,
+            ProductImage = book.Image,
         };
 
         await CartService.AddToCart(item);

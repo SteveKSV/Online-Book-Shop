@@ -1,0 +1,60 @@
+﻿@if (PaginationInfo != null)
+{
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <!-- Previous button -->
+            @if (PaginationInfo.HasPrevious)
+            {
+                <li class="page-item">
+                    <a class="page-link" @onclick="() => NavigateToPage(PaginationInfo.CurrentPage - 1)" aria-label="Previous">
+                        &lt;
+                    </a>
+                </li>
+            }
+
+            <!-- Page numbers with ellipsis if necessary -->
+            @if (PaginationInfo.CurrentPage > 2)
+            {
+                <li class="page-item">
+                    <a class="page-link" @onclick="() => NavigateToPage(1)">1</a>
+                </li>
+                @if (PaginationInfo.CurrentPage > 3)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+            }
+
+            @foreach (int i in DisplayPages)
+            {
+                <li class="page-item @(i == PaginationInfo.CurrentPage ? "active" : "")">
+                    <a class="page-link" @onclick="() => NavigateToPage(i)">@(i)</a>
+                </li>
+            }
+
+            @if (PaginationInfo.CurrentPage < PaginationInfo.TotalPages - 1)
+            {
+                @if (PaginationInfo.CurrentPage < PaginationInfo.TotalPages - 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+                <li class="page-item">
+                    <a class="page-link" @onclick="() => NavigateToPage(PaginationInfo.TotalPages)">@PaginationInfo.TotalPages</a>
+                </li>
+            }
+
+            <!-- Next button -->
+            @if (PaginationInfo.HasNext)
+            {
+                <li class="page-item">
+                    <a class="page-link" @onclick="() => NavigateToPage(PaginationInfo.CurrentPage + 1)" aria-label="Next">
+                        &gt;
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

@@ -7,6 +7,7 @@ public class MongoDbContext
 {
     private readonly IMongoDatabase _database;
     private readonly IMongoCollection<Book> _booksCollection;
+    private readonly IMongoCollection<Review> _reviewsCollection;
 
     public MongoDbContext(IOptions<DatabaseSetting> databaseSettings)
     {
@@ -15,8 +16,11 @@ public class MongoDbContext
 
         // Get the actual collection
         _booksCollection = _database.GetCollection<Book>("book");
+        _reviewsCollection = _database.GetCollection<Review>("review");
+
     }
 
     public IMongoDatabase Database => _database;
     public IMongoCollection<Book> Books => _booksCollection;
+    public IMongoCollection<Review> Reviews => _reviewsCollection;
 }

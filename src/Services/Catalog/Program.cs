@@ -21,6 +21,8 @@ builder.Services.AddTransient<MongoDbContext>();
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
 builder.Services.AddScoped<IBookManager, BookManager>();
 builder.Services.AddScoped<IGenreManager, GenreManager>();
+builder.Services.AddScoped<IReviewManager, ReviewManager>();
+
 //////////////////////// CONTROLLERS CONFIGURATION ///////////////////////////////
 builder.Services.AddControllers();
 
@@ -30,6 +32,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
     o.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog.API", Version = "v1" });
+
 });
 
 var app = builder.Build();

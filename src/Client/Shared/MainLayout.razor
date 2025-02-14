@@ -9,56 +9,64 @@
 <PageTitle>WhatToRead</PageTitle>
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
     <main>
-        <div class="top-row">
-            <div class="welcome-message">
+        <nav class="navbar sticky-top navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container-fluid">
+                <a href="/" class="navbar-brand d-flex align-items-center">
+                    <span class="ms-2">WhatToRead</span>
+                </a>
                 <AuthorizeView>
                     <Authorized>
                         <div class="d-flex align-items-center">
                             <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <a href="/Identity/Account/Manage" class="text-decoration-none">Hello, @context.User.Identity?.Name!</a>
+                            <div class="d-flex align-items-center">
                                 @if (context.User.IsInRole("Administrator"))
                                 {
                                     <span class="badge bg-primary ms-2">Administrator</span>
                                 }
-                                else if (context.User.IsInRole("User"))
-                                {
-                                    <span class="badge bg-secondary ms-2">User</span>
-                                }
+                                <a href="/Identity/Account/Manage" class="nav-item nav-link">Hello, @context.User.Identity?.Name!</a>
                             </div>
                         </div>
                     </Authorized>
                 </AuthorizeView>
-            </div>
+                <div>
+                    <a href="cart" class="nav-item nav-link @(NavigationManager.Uri.Contains("cart") ? "active" : "")">
+                        <span class="oi oi-cart"></span>
+                        Cart
+                        @if (ItemCount > 0)
+                        {
+                            <span class="cart-badge">@ItemCount</span>
+                        }
+                    </a>
+                </div>
+                <!-- Navbar Toggler for mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <!-- Collapsible Navbar Links -->
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <div class="navbar-nav ms-auto d-flex align-items-center justify-content-between">
+                        <div><NavMenu /></div>
 
-            <div class="d-flex align-items-center">
-                <a href="cart" class="ms-3">
-                    <span class="oi oi-cart"></span>
-                    Cart @if (ItemCount > 0)
-                    {
-                        <span class="badge bg-secondary">@ItemCount</span>
-                    }
-                </a>
-                <AuthorizeView>
-                    <Authorized>
-                        <form method="post" action="Identity/Account/LogOut" class="d-inline">
-                            <button type="submit" class="nav-link btn btn-link">Log out</button>
-                        </form>
-                    </Authorized>
-                    <NotAuthorized>
-                        <a href="Identity/Account/Register" class="ms-3">Register</a>
-                        <a href="Identity/Account/Login" class="ms-3">Log in</a>
-                    </NotAuthorized>
-                </AuthorizeView>
+                        <AuthorizeView>
+                            <Authorized>
+                                <form method="post" action="Identity/Account/LogOut" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link">Log out</button>
+                                </form>
+                            </Authorized>
+                            <NotAuthorized>
+                                <div class="d-flex flex-column flex-sm-row">
+                                    <a href="Identity/Account/Register" class="nav-item nav-link">Register</a>
+                                    <a href="Identity/Account/Login" class="nav-item nav-link">Log in</a>
+                                </div>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    </div>
+                </div>
             </div>
-        </div>
+        </nav>
 
-        <article class="content px-4">
+        <article class="content px-4 py-5 text-center">
             @Body
         </article>
     </main>
