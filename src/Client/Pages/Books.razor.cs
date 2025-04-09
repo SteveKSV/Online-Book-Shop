@@ -10,6 +10,7 @@ namespace Client.Pages
         private List<BookModel> books = new();
         private string? searchTerm = null;
         private string? sortOrder = null;
+        private string? sortRatingOrder = null;
         private string? genresQuery = null;
         private PaginationMetadata pagination = new PaginationMetadata();
 
@@ -34,18 +35,16 @@ namespace Client.Pages
 
         private async Task NavigateToPage(int page)
         {
-            // Always load the books and update the current page state when a page is clicked
             if (page != pagination.CurrentPage)
             {
-                // Navigate only when user clicks on a page number
                 Navigation.NavigateTo($"/catalog?page={page}");
-                await LoadBooks(page);  // Load books for the clicked page
+                await LoadBooks(page);
             }
         }
 
         protected async Task LoadBooks(int page = 1)
         {
-            var queryString = $"?pageNumber={page}&pageSize=9&title={searchTerm}&sortOrder={sortOrder}&genre={genresQuery}";
+            var queryString = $"?pageNumber={page}&pageSize=9&title={searchTerm}&sortOrder={sortOrder}&sortRating={sortRatingOrder}&genre={genresQuery}";
 
             var (loadedBooks, loadedPagination) = await Service.GetBooks(queryString);
             if (loadedBooks != null)
@@ -69,6 +68,11 @@ namespace Client.Pages
         await LoadBooks(pagination.CurrentPage);
     }
 
+    private async void SortBooksByRating(string sortRatingOrder)
+    {
+        this.sortRatingOrder = sortRatingOrder;
+        await LoadBooks(pagination.CurrentPage);
+    }
     private async Task FilterBooksByGenre(string? queryString)
     {
         if (queryString == "clear")

@@ -22,11 +22,14 @@ namespace Catalog.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
-            [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
-            [FromQuery] string? genre = null
+            [FromQuery] PaginationParams? paginationParams = null, 
+            string? title = null,
+            string? sortOrder = null,
+            string? sortRating = null,
+            string? genre = null
             )
         {
-            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genre);
+            var products = await _manager.GetBooks(paginationParams, title, sortOrder, sortRating, genre);
             var metadata = new
             {
                 products.TotalCount,

@@ -1,0 +1,503 @@
+﻿@page "/reviews"
+@using Client.Models
+@using System.Security.Claims
+@inject HttpClient HttpClient
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .review-controls {
+        margin-top: 15px;
+    }
+
+   .reviews-container {
+    width: 80%;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.review-card {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.review-card h4 {
+    margin: 0;
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #333;
+}
+
+.review-card p {
+    font-size: 1em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.review-card p strong {
+    color: #007bff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.pagination button {
+    padding: 12px 18px;
+    margin: 0 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+    .pagination-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+.pagination button:disabled {
+    background-color: #d6d6d6;
+    cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.pagination button.active {
+    background-color: #0056b3;
+    font-weight: bold;
+}
+
+.read-more {
+    color: #007bff;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.read-more:hover {
+    color: #0056b3;
+}
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        max-width: 600px;
+        width: 90%;
+        z-index: 1001;
+        position: relative;
+    }
+</style>
+
+<div class="reviews-container">
+    @if (reviews != null && reviews.Any())
+    {
+        @foreach (var review in reviews)
+        {
+            <div class="review-card">
+                <h4>@review.Summary</h4>
+                <p><strong>@review.UserName</strong> - @review.Score/5</p>
+                
+                <!-- Show either preview or full review text -->
+                <p>
+                    @if (review.ShowFullText)
+                    {
+                        @review.Text
+                    }
+                    else
+                    {
+                        @GetPreviewText(review.Text)
+                    }
+                </p>
+
+                <!-- "Read more" button to toggle full review -->
+                @if (!review.ShowFullText)
+                {
+                    <span class="read-more" @onclick="() => ToggleReadMore(review)">Читати далі...</span>
+                }
+
+                <!-- Allow only the review owner to edit/delete -->
+                @if (isAuthorized && review.UserId == currentUserId && !isFormVisible)
+                {
+                    <div class="review-controls">
+                        <button class="btn btn-secondary me-2" @onclick="() => EditReview(review.Id)">Edit</button>
+                        <button class="btn btn-danger" @onclick="() => DeleteReview(review.Id)">Delete</button>
+                    </div>
+                }
+            </div>
+        }
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                <button @onclick="PreviousPage" disabled="@(!HasPreviousPage)">Previous</button>
+                @foreach (var pageNumber in Enumerable.Range(1, TotalPages))
+                {
+                    <button @onclick="() => GoToPage(pageNumber)" class="@(currentPage == pageNumber ? "active" : "")">
+                        @pageNumber
+                    </button>
+                }
+                <button @onclick="NextPage" disabled="@(!HasNextPage)">Next</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>No reviews available.</p>
+    }
+
+    <!-- Inline form for creating/editing a review -->
+    @if (isAuthorized)
+    {
+        <div class="review-form-container">
+            <button class="btn btn-primary mt-4" @onclick="ToggleForm">
+                @(isFormVisible ? "Cancel" : (isEditing ? "Edit Review" : "Write a Review"))
+            </button>
+
+            @if (isFormVisible)
+            {
+                <div class="review-form">
+                    <h3>@(isEditing ? "Edit Review" : "Create Review")</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Summary</label>
+                            <input type="text" class="form-control" @bind="reviewForm.Summary" />
+                        </div>
+                        <div class="form-group">
+                            <label>Score (1-5)</label>
+                            <input type="number" min="1" max="5" class="form-control" @bind="reviewForm.Score" />
+                        </div>
+                        <div class="form-group">
+                            <label>Text</label>
+                            <textarea class="form-control" @bind="reviewForm.Text"></textarea>
+                        </div>
+                        <button type="button" class="btn btn-success" @onclick="SubmitReview">Save</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>
+    
+@code {
+    [Parameter] public string BookId { get; set; }
+    [Parameter] public string BookTitle { get; set; }
+    [Inject] private IConfiguration Config { get; set; }
+
+    private List<ReviewDTO> reviews;
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private bool HasPreviousPage => currentPage > 1;
+    private bool HasNextPage => currentPage < TotalPages;
+
+    private int TotalPages => (int)Math.Ceiling((double)allReviews.Count / pageSize);
+
+    private List<ReviewDTO> allReviews = new List<ReviewDTO>();
+
+    private bool isFormVisible = false;
+    private bool isEditing = false;
+    private Review reviewForm = new() { Score = 1 };
+
+    private bool isAuthorized = false;
+    private Guid currentUserId = Guid.Empty;
+    private string userName = "";
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        isAuthorized = user.Identity?.IsAuthenticated == true;
+
+        if (isAuthorized)
+        {
+            // Safely get the user's ID if authenticated
+            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId))
+            {
+                // If the claim is successfully parsed as a GUID, assign it to currentUserId
+                currentUserId = userId;
+                userName = user.Identity?.Name;
+            }
+            else
+            {
+                // If the claim is invalid, set currentUserId to Guid.Empty
+                currentUserId = Guid.Empty;
+            }
+        }
+        else
+        {
+            // Default value for unauthorized users
+            currentUserId = Guid.Empty;
+        }
+
+        await LoadReviews();
+    }
+
+
+    private async Task LoadReviews()
+    {
+        var url = $"{Config["apiUrl"]}/review/byBook/{BookId}";
+
+        try
+        {
+            var result = await HttpClient.GetFromJsonAsync<List<ReviewDTO>>(url);
+            if (result == null || !result.Any())
+            {
+                allReviews = new List<ReviewDTO>();
+            }
+            else
+            {
+                allReviews = result;
+                PaginateReviews();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reviews: {ex.Message}");
+            allReviews = new List<ReviewDTO>();
+        }
+    }
+
+    private void ToggleForm()
+    {
+        // Toggle the form's visibility
+        isFormVisible = !isFormVisible;
+
+        if (isFormVisible)
+        {
+            // If opening the form in create mode
+            if (!isEditing)
+            {
+                reviewForm = new Review { Id = "", BookId = BookId, UserId = currentUserId, Title = BookTitle, UserName = userName, Score = 1};
+            }
+        }
+        else
+        {
+            // Reset state when closing the form
+            reviewForm = new Review();
+            isEditing = false;
+        }
+    }
+
+    private void EditReview(string reviewId)
+    {
+        // Open the form for editing
+        isFormVisible = true;
+        isEditing = true;
+
+        // Load the selected review into the form (manually map properties)
+        var selectedReview = reviews.FirstOrDefault(r => r.Id == reviewId);
+        if (selectedReview != null)
+        {
+            reviewForm = new Review
+                {
+                    Id = selectedReview.Id,
+                    Title = BookTitle,
+                    UserId = selectedReview.UserId,
+                    UserName = selectedReview.UserName,
+                    Score = selectedReview.Score,
+                    Summary = selectedReview.Summary,
+                    Text = selectedReview.Text,
+                    BookId = selectedReview.BookId
+                };
+        }
+    }
+
+    private async Task SubmitReview()
+    {
+        // Validate the reviewForm data
+        if (string.IsNullOrWhiteSpace(reviewForm.Summary))
+        {
+            // If the Summary is empty or just whitespace, show an error message
+            Console.WriteLine("Error: Summary is required.");
+            return;
+        }
+
+        if (reviewForm.Score < 1 || reviewForm.Score > 5)
+        {
+            // If the Score is not within the valid range (1-5), show an error message
+            Console.WriteLine("Error: Score must be between 1 and 5.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(reviewForm.Text))
+        {
+            // If the Text is empty or just whitespace, show an error message
+            Console.WriteLine("Error: Review text is required.");
+            return;
+        }
+
+        // If everything is valid, proceed with submitting the review
+        try
+        {
+            if (isEditing)
+            {
+                // Send PUT request to update the review
+                var response = await HttpClient.PutAsJsonAsync($"{Config["apiUrl"]}/review/", reviewForm);
+                // Перевірка статусу відповіді
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Review created successfully!");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to create review. Status Code: {response.StatusCode}");
+
+                    // Вивести деталі помилки
+                    var errorDetails = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error details: {errorDetails}");
+                }
+            }
+            else
+            {
+                // Send POST request to create a new review
+                var response = await HttpClient.PostAsJsonAsync($"{Config["apiUrl"]}/review/", reviewForm);
+                // Перевірка статусу відповіді
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Review created successfully!");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to create review. Status Code: {response.StatusCode}");
+
+                    // Вивести деталі помилки
+                    var errorDetails = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error details: {errorDetails}");
+                }
+            }
+
+            isFormVisible = false;
+            await LoadReviews();
+        }
+        catch (Exception ex)
+        {
+            // Handle any errors that occur during the API request
+            Console.WriteLine($"Error submitting review: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteReview(string reviewId)
+    {
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"{Config["apiUrl"]}/review/{reviewId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Видаляємо з локального списку, щоб миттєво оновити UI
+                allReviews.RemoveAll(r => r.Id == reviewId);
+
+                // Оновлюємо відображуваний список
+                PaginateReviews();
+
+                // Перевіряємо, чи не видалили останню картку на сторінці
+                if (!reviews.Any() && currentPage > 1)
+                {
+                    currentPage--; // Переходимо на попередню сторінку
+                    PaginateReviews();
+                }
+
+                StateHasChanged(); // Примусово оновлюємо компонент
+            }
+            else
+            {
+                Console.WriteLine($"Error deleting review: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting review: {ex.Message}");
+        }
+    }
+
+
+    private void CloseForm()
+    {
+        isFormVisible = false;
+    }
+
+    private void PaginateReviews()
+    {
+        reviews = allReviews.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+    }
+
+    private string GetPreviewText(string text)
+    {
+        // Define the preview length (e.g., first 150 characters)
+        const int previewLength = 150;
+        if (text.Length > previewLength)
+        {
+            return text.Substring(0, previewLength) + "...";
+        }
+        return text;
+    }
+
+    private void ToggleReadMore(ReviewDTO review)
+    {
+        // Toggle the ShowFullText property to display or hide the full review text
+        review.ShowFullText = !review.ShowFullText;
+    }
+
+    private async Task NextPage()
+    {
+        if (currentPage < TotalPages)
+        {
+            currentPage++;
+            PaginateReviews();
+        }
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            PaginateReviews();
+        }
+    }
+
+    private void GoToPage(int pageNumber)
+    {
+        if (pageNumber != currentPage)
+        {
+            currentPage = pageNumber;
+            PaginateReviews();
+        }
+    }
+}

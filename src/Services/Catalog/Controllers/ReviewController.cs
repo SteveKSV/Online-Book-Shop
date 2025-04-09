@@ -60,6 +60,8 @@ namespace Catalog.Controllers
 
             // Generate a valid MongoDB ObjectId
             review.Id = ObjectId.GenerateNewId().ToString();
+            review.Helpfulness = "0/0";
+            review.ReviewTime = 60;
 
             await _manager.CreateEntity(review);
 

@@ -5,6 +5,21 @@
 <div>
     <div class="d-flex flex-column flex-sm-column align-content-sm-center justify-content-around mb-medium">
         <div>
+            <h6 class="filter-header">Sort by rating</h6>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortRating" id="sortRatingDefault" value="none" checked @onclick='() => SortByRating("none")'>
+                <label class="custom-radio-label" for="sortRatingDefault">Default</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortRating" id="sortRatingAsc" value="asc" @onclick='() => SortByRating("asc")'>
+                <label class="custom-radio-label" for="sortRatingAsc">Low to High</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="sortRating" id="sortRatingDesc" value="desc" @onclick='() => SortByRating("desc")'>
+                <label class="custom-radio-label" for="sortRatingDesc">High to Low</label>
+            </div>
+        </div>
+        <div>
             <h6 class="filter-header">Sort by Price</h6>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none" checked @onclick='() => SortByPrice("none")'>
@@ -47,6 +62,9 @@
     public EventCallback<string> OnSort { get; set; }
 
     [Parameter]
+    public EventCallback<string> OnSortRating { get; set; }
+
+    [Parameter]
     public EventCallback<string?> OnFilterByGenres { get; set; }
 
     public List<string> Genres { get; set; } = new List<string>();
@@ -55,7 +73,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Genres = (await Service.Get("genre")).OrderBy(g => g).ToList(); // Sort genres alphabetically
+        Genres = (await Service.Get("genre")).OrderBy(g => g).ToList();
         StateHasChanged();
     }
 
@@ -64,16 +82,20 @@
         await OnSort.InvokeAsync(sortOrder);
     }
 
+    private async Task SortByRating(string sortRatingOrder)
+    {
+        await OnSortRating.InvokeAsync(sortRatingOrder);
+    }
+
     private async Task UpdateFilteredBooksByGenre(string? selectedGenre)
     {
-        // Encode the genre to prevent issues with special characters
         string queryString = selectedGenre != null ? Uri.EscapeDataString(selectedGenre) : null;
         await OnFilterByGenres.InvokeAsync(queryString);
     }
 
     private async Task ClearFilters()
     {
-        await JSRuntime.InvokeAsync<object>("resetRadioButtons", null); // Ensure to reset any radio button states
+        await JSRuntime.InvokeAsync<object>("resetRadioButtons", null);
         await OnFilterByGenres.InvokeAsync("clear");
     }
 }
