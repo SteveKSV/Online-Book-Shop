@@ -17,7 +17,7 @@ namespace Catalog.Managers
         }
 
         public async Task<PagedList<Book?>> GetBooks(
-            PaginationParams? paginationParams, string? title, string? sortOrder,string? sortRating,
+            PaginationParams? paginationParams, string? title, string? sortOrder,
             string genre)
         {
             var filterBuilder = new FilterDefinitionBuilder<Book>();
@@ -44,48 +44,17 @@ namespace Catalog.Managers
                 var totalCount = await _collection.CountDocumentsAsync(filter);
 
                 // Add sorting
-                var sortBuilder = Builders<Book>.Sort;
-                SortDefinition<Book>? sort = null;
-
-                // Apply rating sort first
-                if (!string.IsNullOrEmpty(sortRating))
-                {
-                    switch (sortRating.ToLower())
-                    {
-                        case "asc":
-                            sort = sortBuilder.Ascending(book => book.ratingsCount);
-                            break;
-                        case "desc":
-                            sort = sortBuilder.Descending(book => book.ratingsCount);
-                            break;
-                    }
-                }
-
-                // Then apply price sort
                 if (!string.IsNullOrEmpty(sortOrder))
                 {
-                    var priceSort = sortOrder.ToLower() switch
+                    switch (sortOrder.ToLower())
                     {
-                        "asc" => sortBuilder.Ascending(book => book.Price),
-                        "desc" => sortBuilder.Descending(book => book.Price),
-                        _ => null
-                    };
-
-                    // Combine with existing sort
-                    if (sort != null && priceSort != null)
-                    {
-                        sort = sortBuilder.Combine(sort, priceSort);
+                        case "asc":
+                            query = query.SortBy(book => book.Price);
+                            break;
+                        case "desc":
+                            query = query.SortByDescending(book => book.Price);
+                            break;
                     }
-                    else if (priceSort != null)
-                    {
-                        sort = priceSort;
-                    }
-                }
-
-                // Apply the sort if it exists
-                if (sort != null)
-                {
-                    query = query.Sort(sort);
                 }
 
                 // Apply pagination
@@ -106,7 +75,7 @@ namespace Catalog.Managers
         public async Task<Book> GetBookByTitle(string title)
         {
             return await _collection
-                          .Find(p => p.Title.Contains(title))
+                          .Find(p => p.Title == title)
                           .FirstOrDefaultAsync();
         }
 

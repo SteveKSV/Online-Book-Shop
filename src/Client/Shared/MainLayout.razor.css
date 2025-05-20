@@ -65,7 +65,6 @@ main {
     transform: scale(1.1);
     transition: all 0.3s ease-in-out;
 }
-
 @media (max-width: 640.98px) {
     .top-row .welcome-message {
         display: none;
@@ -109,21 +108,11 @@ main {
         flex-direction: column !important; /* Stack the items vertically */
         gap: 10px; /* Optional: add some space between items */
     }
-
-    .user-container {
-        font-size: 12px;
-    }
 }
 
 /* On larger screens (greater than 655px), keep the links in a row */
 @media (min-width: 656px) {
     .navbar-nav .d-flex {
         flex-direction: row !important; /* Keep links in a row for large screens */
-    }
-}
-
-@media (max-width: 400px){
-    .user-container {
-        display: none !important;
     }
 }

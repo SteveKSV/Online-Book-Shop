@@ -8,7 +8,7 @@
 <div class="container">
     <div class="row">
         <div class="scrollable-panel">
-            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre" OnSortRating="SortBooksByRating"></FilterAndSort>
+            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre"></FilterAndSort>
         </div>
 
         <div class="col-md-9">
@@ -36,26 +36,22 @@
                         <a href="/bookdetails/@book.Title" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
                             <div class="card shadow-sm rounded">
                                 <div class="card-body">
-                                    <h5 class="card-title"><b>@TruncateTitle(book.Title, 50)</b></h5>
+                                    <h5 class="card-title"><b>@TruncateTitle(book.Title, 50)</b></h5> <!-- Limit title to 50 characters -->
                                     <p class="card-subtitle mb-2 text-muted text-md-center">@book.Authors</p>
-                                    <img src="@book.Image" alt=@book.Title class="img-fluid">
+                                    <img src="@book.Image" alt="Book Cover" class="img-fluid">
+                                </div>
+                                <div class="mb-2 text-center">
+                                    <a href="/reviews" class="text-decoration-none align-bottom">
+                                        <span class="oi oi-comment-square"></span>
+                                        Reviews
+                                    </a>
                                 </div>
                                 <div class="card-footer text-muted d-flex justify-content-between flex-column flex-sm-row flex-xs-column">
                                     <div class="mb-md-0 text-center text-md-left">
-                                        <span>$@($"{book.Price:F3}")</span> 
+                                        <span>$@($"{book.Price:F3}")</span> <!-- Format price to 3 decimal places -->
                                     </div>
                                     <div class="mb-md-0 text-center text-md-left">
-                                        @for (int i = 1; i <= 5; i++)
-                                        {
-                                            if (i <= book.RatingsCount)
-                                            {
-                                                <span class="text-warning">★</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">☆</span>
-                                            }
-                                        }
+                                        <span>Rating: @($"{book.RatingsCount}")</span>
                                     </div>
                                     <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row">
                                         <form @onclick:preventDefault @onsubmit:stopPropagation>

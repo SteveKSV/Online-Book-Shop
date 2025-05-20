@@ -17,19 +17,19 @@
                 </a>
                 <AuthorizeView>
                     <Authorized>
-                        <div class="d-flex align-items-center ms-3 user-container">
+                        <div class="d-flex align-items-center">
                             <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
                             <div class="d-flex align-items-center">
-                                @if (context?.User?.IsInRole("Administrator") ?? false)
+                                @if (context.User.IsInRole("Administrator"))
                                 {
                                     <span class="badge bg-primary ms-2">Administrator</span>
                                 }
-                                <a href="/Identity/Account/Manage" class="nav-item nav-link">&nbsp;Hello, @context?.User?.Identity?.Name!</a>
+                                <a href="/Identity/Account/Manage" class="nav-item nav-link">Hello, @context.User.Identity?.Name!</a>
                             </div>
                         </div>
                     </Authorized>
                 </AuthorizeView>
-                <div class="ms-4">
+                <div>
                     <a href="cart" class="nav-item nav-link @(NavigationManager.Uri.Contains("cart") ? "active" : "")">
                         <span class="oi oi-cart"></span>
                         Cart
