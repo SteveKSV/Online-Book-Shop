@@ -1,15 +1,14 @@
-﻿using Basket.Entities;
+﻿using Basket.DTO;
+using Basket.Entities;
 
 namespace Basket.Managers.Interfaces
 {
     public interface IBasketManager
     {
-
-        Task<ShoppingCart> GetBasket(string userName);
-        Task<ShoppingCart> UpdateBasket(ShoppingCart basket);
-        Task<ShoppingCart> UpdateItemQuantity(string userName, string productId, int quantity);
-        Task DeleteBasket(string userName);
-        Task<ShoppingCart> RemoveItemFromBasket(string userName, string productId);
-        Task UpdateUserNameInBasket(string oldUserName, string newUserName);
+        Task<BasketDTO> GetBasket(Guid userId);
+        Task<BasketItem> AddOrUpdateItem(Guid userId, Guid bookId, int quantity, decimal price);
+        Task<BasketItem> UpdateItemQuantity(Guid userId, Guid bookId, int quantity);
+        Task DeleteBasket(Guid userId);
+        Task<BasketDTO> RemoveItemFromBasket(Guid userId, Guid bookId);
     }
 }

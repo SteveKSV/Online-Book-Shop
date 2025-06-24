@@ -2,7 +2,7 @@
 {
     public class ResponseWrapper
     {
-        public List<BookResult> Books { get; set; }
+        public List<BookPrediction> Books { get; set; }
     }
 
 }

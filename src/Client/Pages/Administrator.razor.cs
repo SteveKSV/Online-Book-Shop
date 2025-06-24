@@ -6,9 +6,9 @@ namespace Client.Pages
     public partial class Administrator
     {
 
-        private List<BookResult> Books { get; set; } = new List<BookResult>();
-        private BookResult CurrentBook { get; set; }
-        private List<GenrePrediction> Predictions { get; set; } = new List<GenrePrediction>();
+        private List<BookPrediction> Books { get; set; } = new List<BookPrediction>();
+        private BookPrediction CurrentBook { get; set; }
+        private List<Prediction> Predictions { get; set; } = new List<Prediction>();
         private int CurrentBookIndex { get; set; } = 0;
         private string StatusMessage { get; set; }
         private string ErrorMessage { get; set; }
@@ -42,7 +42,7 @@ namespace Client.Pages
                     { 
 
                         Books.AddRange(responseObject.Books);
-                        Books.OrderByDescending(book => book.Uncertainty);
+                        Books = Books.OrderByDescending(book => book.Uncertainty).ToList();
                         SkipCount += 70;
                         SetCurrentBook();
                     }
@@ -69,7 +69,7 @@ namespace Client.Pages
         private void SetCurrentBook()
         {
             CurrentBook = Books.ElementAtOrDefault(CurrentBookIndex)!;
-            Predictions = CurrentBook?.Predictions ?? new List<GenrePrediction>();
+            Predictions = CurrentBook?.Predictions ?? new List<Prediction>();
         }
 
         /// <summary>
@@ -208,11 +208,11 @@ namespace Client.Pages
         /// </summary>
         private void NextBook()
         {
-            if (CurrentBookIndex < Books.Count - 1)
+            if (!IsLastBook)
             {
                 CurrentBookIndex++;
                 SetCurrentBook();
-                StateHasChanged(); // Force re-render
+                StateHasChanged();
             }
         }
 
@@ -221,11 +221,11 @@ namespace Client.Pages
         /// </summary>
         private void PreviousBook()
         {
-            if (CurrentBookIndex > 0)
+            if (!IsFirstBook)
             {
                 CurrentBookIndex--;
                 SetCurrentBook();
-                StateHasChanged(); // Force re-render
+                StateHasChanged();
             }
         }
 

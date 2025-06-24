@@ -3,7 +3,7 @@
     public class EntityBase
     {
         public Guid Id { get; set; }
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     }
 }

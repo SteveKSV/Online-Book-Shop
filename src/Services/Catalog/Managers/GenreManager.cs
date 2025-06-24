@@ -1,30 +1,57 @@
-﻿using Catalog.Entities;
-using Catalog.Managers.Interfaces;
-using MongoDB.Driver;
+﻿using Catalog.Managers.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Catalog.Managers
 {
-    public class GenreManager : GenericManager<Book>, IGenreManager
+    public class GenreManager : IGenreManager
     {
-        public GenreManager(MongoDbContext context) : base(context)
+        private readonly AppDbContext _context;
+        private readonly IDistributedCache _cache;
+
+        public GenreManager(AppDbContext context, IDistributedCache cache)
         {
+            _context = context;
+            _cache = cache;
         }
 
         public async Task<IEnumerable<string>> GetAllGenres()
         {
-            // Use the Distinct method to get unique genres from all documents
-            var genres = await _collection.Distinct<string>("genres", FilterDefinition<Book>.Empty).ToListAsync();
+            string cacheKey = "genre_list";
 
-            // Split each genre string by comma, filter out empty strings, and flatten the list
-            var allGenres = genres
-                .SelectMany(g => g.Split(',')) // Split each genre string by comma
-                .Select(g => g.Trim()) // Trim leading and trailing spaces
-                .Where(g => !string.IsNullOrEmpty(g)) // Filter out empty strings
-                .Distinct() // Get unique genres
-                .ToList();
+            try
+            {
+                var cachedGenres = await _cache.GetStringAsync(cacheKey);
+                if (!string.IsNullOrEmpty(cachedGenres))
+                {
+                    return JsonSerializer.Deserialize<List<string>>(cachedGenres)!;
+                }
+            }
+            catch
+            {
+                // Якщо кеш недоступний — ігноруємо помилку і працюємо напряму з бази
+            }
 
-            return allGenres;
+            var genres = await _context.Genres
+                .Select(g => g.Name)
+                .Distinct()
+                .ToListAsync();
+
+            try
+            {
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+                };
+                await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(genres), options);
+            }
+            catch
+            {
+                // Ігноруємо помилки при записі кешу
+            }
+
+            return genres;
         }
-
     }
 }

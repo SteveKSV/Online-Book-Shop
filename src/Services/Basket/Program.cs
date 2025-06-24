@@ -2,9 +2,10 @@ using Basket.Managers.Interfaces;
 using Basket.Managers;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using Discount.Grpc;
-using Basket.API.GrpcServices;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using System;
+using Basket.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,11 +29,10 @@ var discountGrpcConnection = environment == "Docker"
 builder.Services.AddControllers();
 
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
-builder.Services.AddStackExchangeRedisCache(options =>
+builder.Services.AddHttpClient<ICatalogService, CatalogService>(client =>
 {
-    options.Configuration = redisConnectionString;
+    client.BaseAddress = new Uri("https://localhost:5005"); 
 });
-
 builder.Services.AddScoped<IBasketManager, BasketManager>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
@@ -48,13 +48,9 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-//////////////////////// DISCOUNT gRPC CONFIGURATION ///////////////////////////////
-builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(options =>
-{
-    options.Address = new Uri(discountGrpcConnection);
-});
-
-builder.Services.AddScoped<DiscountGrpcService>();
+//////////////////////// DATABASE CONFIGURATION ///////////////////////////////
+builder.Services.AddDbContext<BasketDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("WhatToReadConnStr")));
 
 //////////////////////// SWAGGER CONFIGURATION ///////////////////////////////
 builder.Services.AddEndpointsApiExplorer();

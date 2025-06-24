@@ -1,4 +1,4 @@
-﻿using Client.Models;
+﻿using Client.Models.Catalog;
 using Client.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
@@ -9,64 +9,96 @@ namespace Client.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+
         public CatalogService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _configuration = configuration;
         }
+
         public async Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null)
         {
+            // Перевірка та нормалізація query string
+            string query = string.IsNullOrWhiteSpace(queryString) ? "" :
+                           queryString.StartsWith("?") ? queryString : "?" + queryString;
 
-            // Створення HTTP запиту
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{_configuration.GetSection("apiUrl").Value}/catalog{queryString}");
+            string url = $"{_configuration["apiUrl"]}/catalog{query}";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-            // Виконання запиту
             var response = await _httpClient.SendAsync(request);
-            
-            if (!response.IsSuccessStatusCode) return (null, null);
 
-            // Retrieve books from response body
+            if (!response.IsSuccessStatusCode)
+                return (null, null);
+
             var books = await response.Content.ReadFromJsonAsync<List<BookModel>>();
-
-            // Retrieve pagination metadata from response headers
             var paginationMetadata = ParsePaginationMetadata(response.Headers);
 
-            return (books, paginationMetadata);
+            return (books ?? new List<BookModel>(), paginationMetadata);
         }
 
         public async Task<List<string>> Get(string queryString = null)
         {
-            var response = await _httpClient.GetAsync($"{_configuration.GetSection("apiUrl").Value}/{queryString}");
+            var url = $"{_configuration["apiUrl"]}/{queryString}";
+            var response = await _httpClient.GetAsync(url);
 
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+                return null!;
 
-            // Retrieve entities from response body
-            var entities = await response.Content.ReadFromJsonAsync<List<string>>();
-
-            return entities;
-
+            return await response.Content.ReadFromJsonAsync<List<string>>();
         }
+
+        public async Task<bool> AddCommentAsync(AddUpdateComment comment)
+        {
+            var url = $"{_configuration["apiUrl"]}/comment";
+            var response = await _httpClient.PostAsJsonAsync(url, comment);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> UpdateCommentAsync(AddUpdateComment comment)
+        {
+            var url = $"{_configuration["apiUrl"]}/comment/update-comment";
+            var response = await _httpClient.PutAsJsonAsync(url, comment);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<bool> DeleteCommentAsync(Guid commentId)
+        {
+            var url = $"{_configuration["apiUrl"]}/comment/{commentId}";
+            var response = await _httpClient.DeleteAsync(url);
+            return response.IsSuccessStatusCode;
+        }
+
+        public async Task<(List<Comment>, PaginationMetadata)> GetCommentsForBook(Guid bookId, string? queryString = null)
+        {
+            // Перевірка та нормалізація query string
+            string query = string.IsNullOrWhiteSpace(queryString) ? "" :
+                           queryString.StartsWith("?") ? queryString : "?" + queryString;
+
+            var url = $"{_configuration["apiUrl"]}/catalog/{bookId}/comments{query}";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+                return (new List<Comment>(), new PaginationMetadata());
+
+            var comments = await response.Content.ReadFromJsonAsync<List<Comment>>();
+            var paginationMetadata = ParsePaginationMetadata(response.Headers);
+
+            return (comments ?? new List<Comment>(), paginationMetadata);
+        }
+
         private PaginationMetadata ParsePaginationMetadata(HttpResponseHeaders headers)
         {
-            PaginationMetadata metadata = new PaginationMetadata();
-
-            if (headers.Contains("X-Pagination"))
+            if (headers.TryGetValues("X-Pagination", out var values))
             {
-                var paginationHeader = headers.GetValues("X-Pagination").FirstOrDefault();
+                var paginationHeader = values.FirstOrDefault();
                 if (!string.IsNullOrEmpty(paginationHeader))
                 {
-                    var paginationData = JsonConvert.DeserializeObject<dynamic>(paginationHeader);
-                    metadata.TotalCount = paginationData!.TotalCount;
-                    metadata.PageSize = paginationData.PageSize;
-                    metadata.CurrentPage = paginationData.CurrentPage;
-                    metadata.TotalPages = paginationData.TotalPages;
-                    metadata.HasNext = paginationData.HasNext;
-                    metadata.HasPrevious = paginationData.HasPrevious;
+                    return JsonConvert.DeserializeObject<PaginationMetadata>(paginationHeader)!;
                 }
             }
 
-            return metadata;
+            return new PaginationMetadata();
         }
-
     }
 }

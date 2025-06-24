@@ -1,114 +1,74 @@
 ﻿@page "/administrator"
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Authorization
-@using System.Net.Http
-@using System.Text.Json
 @inject HttpClient Http
 @inject IConfiguration _configuration
 
-@attribute [Authorize(Roles = "Administrator")]
+@attribute [Authorize(Roles = "Admin")]
 
-<div class="container text-center">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="flex-grow-1 text-center">Books` Classification</h2>
-        <div>
-            <button @onclick="PreviousBook" class="btn btn-secondary" disabled="@IsFirstBook">← Previous</button>
-            <button @onclick="NextBook" class="btn btn-secondary" disabled="@IsLastBook">Next →</button>
-            <button @onclick="SkipBook" class="btn btn-secondary">Skip (Accept Model's Genre)</button>
-            <button @onclick="LoadMoreBooks" class="btn btn-secondary">Load More Books</button>
-            <button @onclick="SubmitReviewedBooks" class="btn btn-success" disabled="@IsSubmitButtonDisabled">Submit Reviewed Books</button>
-        </div>
+<div class="container py-4">
+    <h2 class="text-center mb-4">Books’ Classification</h2>
+
+    <!-- Action Buttons -->
+    <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+        <button @onclick="PreviousBook" class="btn btn-outline-secondary" disabled="@IsFirstBook">← Previous</button>
+        <button @onclick="NextBook" class="btn btn-outline-secondary" disabled="@IsLastBook">Next →</button>
+        <button @onclick="SkipBook" class="btn btn-outline-warning">Skip (Accept Model's Genre)</button>
+        <button @onclick="LoadMoreBooks" class="btn btn-outline-info">Load More Books</button>
+        <button @onclick="SubmitReviewedBooks" class="btn btn-success" disabled="@IsSubmitButtonDisabled">Submit Reviewed Books</button>
     </div>
 
-    <!-- Display messages and current book details -->
-    <div class="my-4">
-        <p class="text-muted">Labeled Books: @ReviewedBooks.Count / @Books.Count</p>
-        <p class="text-muted">Current Book: @(@CurrentBookIndex + 1) of @Books.Count</p>
+    <!-- Info panel -->
+    <div class="text-center text-muted mb-3">
+        <p>Labeled Books: <strong>@ReviewedBooks.Count</strong> / @Books.Count</p>
+        <p>Current Book: <strong>@(@CurrentBookIndex + 1)</strong> of @Books.Count</p>
     </div>
 
+    <!-- Status / Error Message -->
     @if (!string.IsNullOrEmpty(StatusMessage))
     {
-        <div class="alert alert-success mt-3 position-relative">
-            <button type="button" class="close-btn" @onclick="() => StatusMessage = null" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+        <div class="alert alert-success alert-dismissible fade show position-relative" role="alert">
             @StatusMessage
+            <button type="button" class="close-btn" @onclick="() => StatusMessage = null" aria-label="Close">&times;</button>
         </div>
     }
 
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
-        <div class="alert alert-danger mt-3 position-relative">
-            <button type="button" class="close-btn" @onclick="() => ErrorMessage = null" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
+        <div class="alert alert-danger alert-dismissible fade show position-relative" role="alert">
             @ErrorMessage
+            <button type="button" class="close-btn" @onclick="() => ErrorMessage = null" aria-label="Close">&times;</button>
         </div>
     }
 
+    <!-- Book Details -->
     @if (CurrentBook != null)
     {
-        <div class="book-details">
-            <h3>@CurrentBook.Title</h3>
-            <p>@CurrentBook.Description</p>
-            <p><strong>Uncertainty: </strong>@CurrentBook.Uncertainty%</p>
+        <div class="book-details mb-4">
+            <h3 class="text-center">@CurrentBook.Title</h3>
+            <p class="text-justify">@CurrentBook.Description</p>
         </div>
 
-        <!-- Display predictions and genre selection buttons in 3 columns with 5 rows -->
-        <div class="row">
-            <h4 class="col-12">Predicted Genres:</h4>
-
-            <!-- First Column -->
-            <div class="col-md-4">
-                <ul class="list-unstyled">
-                    @foreach (var genre in Predictions.OrderByDescending(g => g.Probability).Take(5))
-                    {
-                        <li class="my-3">
-                            <strong>@genre.Name</strong>: @(genre.Probability)%
-                            <button @onclick="() => IsGenreSelected(genre.Name) ? UnselectGenre(genre.Name) : SelectGenre(genre.Name)"
-                                    class="btn btn-sm @(IsGenreSelected(genre.Name) ? "btn-danger" : "btn-primary")">
-                                @(IsGenreSelected(genre.Name) ? "Unselect" : "Select")
-                            </button>
-                        </li>
-                    }
-                </ul>
-            </div>
-
-            <!-- Second Column -->
-            <div class="col-md-4">
-                <ul class="list-unstyled">
-                    @foreach (var genre in Predictions.OrderByDescending(g => g.Probability).Skip(5).Take(5))
-                    {
-                        <li class="my-3">
-                            <strong>@genre.Name</strong>: @(genre.Probability)%
-                            <button @onclick="() => IsGenreSelected(genre.Name) ? UnselectGenre(genre.Name) : SelectGenre(genre.Name)"
-                                    class="btn btn-sm @(IsGenreSelected(genre.Name) ? "btn-danger" : "btn-primary")">
-                                @(IsGenreSelected(genre.Name) ? "Unselect" : "Select")
-                            </button>
-                        </li>
-                    }
-                </ul>
-            </div>
-
-            <!-- Third Column -->
-            <div class="col-md-4">
-                <ul class="list-unstyled">
-                    @foreach (var genre in Predictions.OrderByDescending(g => g.Probability).Skip(10).Take(5))
-                    {
-                        <li class="my-3">
-                            <strong>@genre.Name</strong>: @(genre.Probability)%
-                            <button @onclick="() => IsGenreSelected(genre.Name) ? UnselectGenre(genre.Name) : SelectGenre(genre.Name)"
-                                    class="btn btn-sm @(IsGenreSelected(genre.Name) ? "btn-danger" : "btn-primary")">
-                                @(IsGenreSelected(genre.Name) ? "Unselect" : "Select")
-                            </button>
-                        </li>
-                    }
-                </ul>
-            </div>
+        <!-- Predictions -->
+        <h4 class="text-center mb-3">Predicted Genres</h4>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            @foreach (var genre in Predictions.OrderByDescending(g => g.Probability))
+            {
+                <div class="col">
+                    <div class="genre-card p-3 border rounded text-center h-100">
+                        <h6>@genre.Name</h6>
+                        <p class="text-muted mb-2">@(genre.Probability)%</p>
+                        <button @onclick="() => IsGenreSelected(genre.Name) ? UnselectGenre(genre.Name) : SelectGenre(genre.Name)"
+                                class="btn btn-sm w-100 @(IsGenreSelected(genre.Name) ? "btn-danger" : "btn-primary")">
+                            @(IsGenreSelected(genre.Name) ? "Unselect" : "Select")
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     }
     else
     {
-        <p class="text-muted">Loading books...</p>
+        <p class="text-center text-muted">Loading books...</p>
     }
 </div>

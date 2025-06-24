@@ -1,51 +1,58 @@
-﻿.book-details h3 {
+﻿/* Book Details */
+.book-details h3 {
     color: #333;
-    font-weight: bold;
+    font-weight: 600;
+    margin-bottom: 1rem;
 }
 
 .book-details p {
     font-size: 1.1em;
-    line-height: 1.5;
+    line-height: 1.6;
+    text-align: justify;
 }
 
+/* Alerts */
 .alert {
-    margin-top: 20px;
-}
-
-.btn-info {
-    background-color: #17a2b8;
-}
-
-.btn-success {
-    background-color: #28a745;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
+    padding-right: 2.5rem;
+    position: relative;
+    margin-top: 1rem;
 }
 
 .close-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: white;
-    border: 2px solid red; /* Red border */
-    border-radius: 50%; /* Circular button */
-    color: red; /* Red X */
-    font-size: 16px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    top: 8px;
+    right: 12px;
+    background-color: transparent;
+    border: none;
+    font-size: 1.3rem;
+    color: #dc3545;
     cursor: pointer;
+    line-height: 1;
 }
 
     .close-btn:hover {
-        background-color: #f8d7da; /* Light red background on hover */
+        color: #a71d2a;
     }
 
-.alert {
-    position: relative;
-    padding-right: 40px; /* Add space for the close button */
+/* Genre Prediction Cards */
+.genre-card {
+    background-color: #f8f9fa;
+    transition: box-shadow 0.2s ease-in-out;
 }
+
+    .genre-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+/* Buttons */
+.btn-outline-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+    .btn-outline-warning:hover {
+        background-color: #ffe8a1;
+        border-color: #ffd966;
+        color: #000;
+    }

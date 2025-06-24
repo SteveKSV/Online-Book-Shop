@@ -1,4 +1,5 @@
-﻿using Client.Models;
+﻿using Client.Models.Catalog;
+using System.Threading.Tasks;
 
 namespace Client.Services.Interfaces
 {
@@ -6,6 +7,10 @@ namespace Client.Services.Interfaces
     {
         Task<(List<BookModel>, PaginationMetadata)> GetBooks(string? queryString = null);
         Task<List<string>> Get(string? queryString = null);
+        Task<(List<Comment>, PaginationMetadata)> GetCommentsForBook(Guid bookId, string? queryString = null);
+        Task<bool> AddCommentAsync(AddUpdateComment comment);
+        Task<bool> UpdateCommentAsync(AddUpdateComment comment);
+        Task<bool> DeleteCommentAsync(Guid commentId);
 
     }
 }
