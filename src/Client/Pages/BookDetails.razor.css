@@ -11,6 +11,27 @@ section {
    max-height: 800px;
 }
 
+/* Стиль для зірок */
+i.bi {
+    font-size: 1.75rem;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+i.bi:hover {
+    transform: scale(1.2);
+    color: #ffc107; /* золотий */
+}
+
+    /* Наведіть курсор — всі зірки неактивні */
+i.bi.bi-star:hover ~ i.bi.bi-star {
+    color: #ccc;
+}
+
+/* Активні зірки — вже обраний рейтинг */
+.text-warning {
+    color: #ffc107 !important;
+}
+
 @media (max-width: 1110px){
     article {
         flex-direction: column;

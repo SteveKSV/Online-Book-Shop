@@ -1,17 +1,69 @@
 ﻿@page "/"
+@using Client.Models.Catalog
+@using System.Text.Json
 @layout MainLayout
 @inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration _configuration
 
 <PageTitle>Home</PageTitle>
+
 <style>
-    .image-container {
-        max-width: 600px; /* Keeps image smaller */
-        max-height: 350px; /* Restricts height to avoid scrolling */
-        overflow: hidden; /* Ensures no extra space */
+    .scroll-container {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 1rem;
+        scroll-padding: 1rem;
+        gap: 1rem;
+        scrollbar-color: #007bff #f0f0f0; /* Кольори лінії */
+        scrollbar-width: thin; /* Firefox */
+    }
+
+        /* Стилі для Webkit (Chrome, Safari, Edge) */
+        .scroll-container::-webkit-scrollbar {
+            height: 12px;
+        }
+
+        .scroll-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 6px;
+        }
+
+        .scroll-container::-webkit-scrollbar-thumb {
+            background-color: #007bff;
+            border-radius: 6px;
+            border: 3px solid #f0f0f0;
+        }
+
+
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    /* Для Firefox */
+    .scrollbar-container {
+        scrollbar-width: thin;
+        scrollbar-color: #007bff #f0f0f0;
+    }
+
+    /* Картка займає 33% ширини контейнера (3 в ряд) */
+    .book-card {
+        flex: 0 0 33.3333%;
+        scroll-snap-align: start;
+        max-width: 33.3333%;
+    }
+
+    /* Зберігаємо висоту картинки */
+    .book-card img {
+        height: 220px;
+        object-fit: cover;
     }
 </style>
 
-<main class="d-flex flex-column align-items-md-center justify-content-center container text-center mt-5">
+<main class="container text-center mt-5">
     <h1 class="text-primary display-4">WhatToRead</h1>
     <p class="text-muted lead">Discover your next favorite book!</p>
 
@@ -21,15 +73,150 @@
         <button class="btn btn-primary" @onclick="SearchBooks">Search</button>
     </div>
 
-    <div class="mt-5 d-flex justify-content-center image-container ">
-        <div class="rounded shadow-lg">
-            <img src="https://orange-publishers.com/wp-content/uploads/2022/02/book-page-1005324.jpg" alt="Books Collection" class="img-fluid rounded shadow-lg">
+    @if (isLoading)
+    {
+        <div class="mt-5 text-secondary d-flex align-items-center justify-content-center">
+            <span class="spinner-border text-primary me-2" role="status" aria-hidden="true"></span>
+            <span>Loading @((isAuthenticated) ? "recommendations" : "popular books")...</span>
         </div>
+    }
+    else if (recommendedBooks.Any())
+    {
+        <section class="mt-5 text-start">
+            <h2 class="text-primary">
+                @if (isAuthenticated)
+                {
+                    <text>Recommended for you</text>
+                }
+                else
+                {
+                    <text>Popular Books</text>
+                }
+            </h2>
+
+            <!-- Scroll area (залишаємо як раніше) -->
+            <div class="scroll-container mt-3">
+                @for (int i = 0; i < recommendedBooks.Count; i++)
+                {
+                    if (i % 3 == 0)
+                    {
+                        <span id="book-anchor-@i"></span> <!-- Scroll target -->
+                    }
+
+                    <a href="/bookdetails/@recommendedBooks[i].Id" class="book-card card-anchor text-decoration-none text-dark">
+                        <div class="card shadow-sm rounded h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title fw-bold">@Truncate(recommendedBooks[i].Title, 50)</h5>
+                                <p class="card-subtitle mb-2 text-muted">@recommendedBooks[i].Authors</p>
+                                <img src="@recommendedBooks[i].CoverImage" alt="Book Cover" class="img-fluid mb-2" style="max-height: 220px; object-fit: cover;">
+                            </div>
+                            <div class="card-footer d-flex justify-content-between flex-wrap">
+                                <div class="text-primary fw-bold">
+                                    $@($"{recommendedBooks[i].Price:F2}")
+                                </div>
+                                <div>
+                                    @RenderStars(recommendedBooks[i].AverageRating)
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                }
+            </div>
+
+        </section>
+    }
+    else
+    {
+        <p class="mt-5 text-muted">No books available right now.</p>
+    }
+    @if (newBooks.Any())
+    {
+        <h2 class="text-primary mt-5">New Books</h2>
+        <div class="scroll-container mt-3">
+            @foreach (var book in newBooks)
+            {
+                <a href="/bookdetails/@book.Id" class="book-card card-anchor text-decoration-none text-dark">
+                    <div class="card shadow-sm rounded h-100">
+                        <div class="card-body text-center">
+                            <h5 class="card-title fw-bold">@Truncate(book.Title, 50)</h5>
+                            <p class="card-subtitle mb-2 text-muted">@book.Authors</p>
+                            <img src="@book.CoverImage" alt="Book Cover" class="img-fluid mb-2" style="max-height: 220px; object-fit: cover;">
+                        </div>
+                        <div class="card-footer d-flex justify-content-between flex-wrap">
+                            <div class="text-primary fw-bold">
+                                $@($"{book.Price:F2}")
+                            </div>
+                            <div>
+                                @RenderStars(book.AverageRating)
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
+
+    <div class="mt-5 d-flex justify-content-center">
+        <img src="https://orange-publishers.com/wp-content/uploads/2022/02/book-page-1005324.jpg"
+         alt="Books Collection" class="img-fluid rounded shadow-lg" style="max-height: 350px;">
     </div>
 </main>
 
 @code {
     private string searchQuery = "";
+    private List<CardBookModel> recommendedBooks = new();
+    private List<CardBookModel> newBooks = new();
+    private bool isLoading = true;
+    private bool isAuthenticated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            isAuthenticated = user.Identity?.IsAuthenticated == true;
+
+            HttpResponseMessage response;
+
+            var apiUrl = _configuration["apiUrl"];
+            if (isAuthenticated)
+            {
+                var userId = user.FindFirst("sub")?.Value;
+                response = await Http.GetAsync($"{apiUrl}/Recommendation/{userId}");
+            }
+            else
+            {
+                response = await Http.GetAsync($"{apiUrl}/Recommendation/top");
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                recommendedBooks = JsonSerializer.Deserialize<List<CardBookModel>>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<CardBookModel>();
+            }
+
+            var newResponse = await Http.GetAsync($"{apiUrl}/Recommendation/new");
+            if (newResponse.IsSuccessStatusCode)
+            {
+                var json = await newResponse.Content.ReadAsStringAsync();
+                newBooks = JsonSerializer.Deserialize<List<CardBookModel>>(json, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<CardBookModel>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load recommendations: {ex.Message}");
+        }
+
+        isLoading = false;
+    }
 
     private void SearchBooks()
     {
@@ -42,4 +229,36 @@
             NavigationManager.NavigateTo("/catalog?pageSize=9");
         }
     }
+
+    private void NavigateToBook(Guid bookId)
+    {
+        NavigationManager.NavigateTo($"/bookDetails/{bookId}");
+    }
+
+    private string Truncate(string text, int maxLength)
+        => string.IsNullOrWhiteSpace(text) || text.Length <= maxLength
+           ? text
+           : text.Substring(0, maxLength) + "...";
+
+    private RenderFragment RenderStars(double rating) => builder =>
+    {
+        int fullStars = (int)Math.Floor(rating);
+        int starIndex = 0;
+
+        for (; starIndex < fullStars; starIndex++)
+        {
+            builder.OpenElement(starIndex, "span");
+            builder.AddAttribute(starIndex, "class", "text-warning");
+            builder.AddContent(starIndex, "★");
+            builder.CloseElement();
+        }
+
+        for (; starIndex < 5; starIndex++)
+        {
+            builder.OpenElement(starIndex + 5, "span");
+            builder.AddAttribute(starIndex + 5, "class", "text-muted");
+            builder.AddContent(starIndex + 5, "☆");
+            builder.CloseElement();
+        }
+    };
 }

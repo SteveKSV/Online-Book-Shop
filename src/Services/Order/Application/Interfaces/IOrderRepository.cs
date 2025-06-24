@@ -7,11 +7,9 @@ namespace Application.Interfaces
     {
         Task<List<Order>> GetAllOrders();
         Task<Order> GetOrderById(Guid id);
+        Task<List<Order>> GetOrdersByUserId(Guid userId);
         Task<Order> CheckoutOrder(Order order);
         Task<bool> UpdateOrder(Order order);
         Task<bool> DeleteOrder(Guid id);
-
-        Task<List<Order>> GetOrdersByUsername(string username);
-        Task<bool> UpdateUserNameInOrders(UpdateUsername updateUsername);
     }
 }

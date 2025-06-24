@@ -1,0 +1,69 @@
+﻿@using Client.Models
+
+@if (IsLoading)
+{
+    <p>Loading comments...</p>
+}
+else if (Comments != null && Comments.Any())
+{
+    <div class="list-group">
+        @foreach (var comment in Comments)
+        {
+            bool isExpanded = expandedStates.TryGetValue(comment.Id, out var state) && state;
+
+            <div class="list-group-item list-group-item-action flex-column align-items-start shadow-sm rounded mb-3 p-3 bg-light">
+                <div class="d-flex w-100 justify-content-between mb-2">
+                    <h6 class="mb-1 text-primary">@comment.Username</h6>
+                    <small class="text-muted">@comment.CommentedAt.ToString("g")</small>
+                </div>
+
+                <p class="mb-2 text-dark" style="white-space: pre-wrap;">
+                    @(isExpanded ? comment.CommentText : GetShortText(comment.CommentText))
+                </p>
+
+                @if (comment.CommentText.Length > MaxLength)
+                {
+                    <button class="btn btn-link text-decoration-none p-0 fw-bold text-primary"
+                            @onclick="() => ToggleExpanded(comment.Id)">
+                        @(isExpanded ? "Згорнути ▲" : "Читати далі ▼")
+                    </button>
+                }
+
+                @if(IsLoggedIn)
+                {
+                    @if (comment.UserId == CurrentUserId || IsAdmin)
+                    {
+                        <div class="mt-2">
+                            @if (comment.UserId == CurrentUserId)
+                            {
+                                <button class="btn btn-sm btn-outline-primary me-2" @onclick="@(() => StartEditing(comment))">Редагувати</button>
+                            }
+                            <button class="btn btn-sm btn-outline-danger" @onclick="@(() => DeleteComment(comment.Id))">Видалити</button>
+                        </div>
+                    }
+
+                    @if (IsEditing && EditingComment != null)
+                    {
+                        <textarea class="form-control mb-2" @bind="EditingComment.CommentText"></textarea>
+                        <button class="btn btn-success btn-sm me-2" @onclick="SaveEditedComment">Зберегти</button>
+                        <button class="btn btn-secondary btn-sm" @onclick="CancelEditing">Скасувати</button>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+    <Pagination PaginationInfo="PaginationInfo" OnPageChanged="LoadComments" />
+}
+else
+{
+    <div class="alert alert-secondary text-center">
+        Наразі немає коментарів.
+    </div>
+}
+
+@if (IsLoggedIn)
+{
+    <textarea class="form-control" @bind="NewCommentText" placeholder="Залиште коментар..."></textarea>
+    <button class="btn btn-primary mt-2" @onclick="AddComment">Надіслати</button>
+}

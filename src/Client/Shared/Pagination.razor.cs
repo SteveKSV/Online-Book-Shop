@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Client.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Client.Models.Catalog;
 
 namespace Client.Shared
 {

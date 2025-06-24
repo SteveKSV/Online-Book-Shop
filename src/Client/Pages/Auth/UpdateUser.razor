@@ -1,0 +1,66 @@
+﻿@page "/update-user"
+@attribute [Authorize]
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-4 border-0">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 text-center text-primary">Update Profile</h3>
+
+                    @if (!string.IsNullOrEmpty(SuccessMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @SuccessMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <EditForm Model="UserModel" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger mb-3" />
+
+                        <fieldset disabled="@IsLoading">
+                            <div class="form-floating mb-3">
+                                <InputText id="username" class="form-control" @bind-Value="UserModel.UserName" placeholder="User Name" />
+                                <label for="username">User Name</label>
+                            </div>
+
+                            <div class="form-floating mb-3">
+                                <InputText id="email" class="form-control" @bind-Value="UserModel.Email" placeholder="Email" />
+                                <label for="email">Email</label>
+                            </div>
+
+                            <div class="form-floating mb-4">
+                                <InputText id="password" type="password" class="form-control" @bind-Value="UserModel.Password" placeholder="New Password" />
+                                <label for="password">New Password</label>
+                            </div>
+                        </fieldset>
+
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-save me-2"></i>
+                                <span> Save Changes.</span>
+                               
+                            }
+                        </button>
+                    </EditForm>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

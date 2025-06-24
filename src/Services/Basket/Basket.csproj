@@ -34,10 +34,4 @@
     <ProjectReference Include="..\Order\Application\Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Protobuf Include="..\Discount\Discount.Grpc\Protos\discount.proto" GrpcServices="Client">
-      <Link>Protos\discount.proto</Link>
-    </Protobuf>
-  </ItemGroup>
-
 </Project>

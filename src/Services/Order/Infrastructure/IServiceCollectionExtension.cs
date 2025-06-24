@@ -43,6 +43,7 @@ namespace Infrastructure
         private static void AddRepositories(this IServiceCollection services)
         {
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
         }
     }
 }

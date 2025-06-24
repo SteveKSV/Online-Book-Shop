@@ -1,28 +1,47 @@
 ﻿@page "/catalog"
+
 @using Client.Services.Interfaces
 @using Client.Shared
 @inject NavigationManager Navigation
 @inject IShoppingCartService CartService
 @inject ICatalogService Service
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
 
 <div class="container">
     <div class="row">
         <div class="scrollable-panel">
-            <FilterAndSort OnSort="SortBooks" OnFilterByGenres="FilterBooksByGenre"></FilterAndSort>
+          <FilterAndSort
+              Genres="@genres"
+              SelectedGenre="@genresQuery"
+              SortOrder="@sortOrder"
+              OnSort="SortBooks"
+              OnFilterByGenres="FilterBooksByGenre" />
         </div>
 
         <div class="col-md-9">
             <h1>Books</h1>
 
             <div class="w-100" style="margin-bottom: 30px">
-                <label class="input-group">
-                    <span class="input-group-text" style="cursor: pointer;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <form class="input-group" @onsubmit="ApplySearch">
+                    <span class="input-group-text">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                             fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                             <path d="M11.742 9.344a5.5 5.5 0 1 0-1.397 1.398l3.86 3.86a1 1 0 0 0 1.415-1.416l-3.86-3.86zm-.342-3.968a4 4 0 1 1-6.468-1.47A4 4 0 0 1 11.4 5.376z" />
                         </svg>
                     </span>
-                    <input type="text" class="form-control" placeholder="Search" @bind="searchTerm" @oninput="SearchBooks" tabindex="1" autofocus />
-                </label>
+
+                    <input type="text" class="form-control" placeholder="Search.."
+                           @bind="searchInput" tabindex="1" autofocus />
+
+                    <button class="btn btn-primary" type="submit">
+                        Search
+                    </button>
+
+                    <button class="btn btn-outline-secondary" @onclick="ClearSearch" type="button">
+                        ✖
+                    </button>
+                </form>
             </div>
 
             <Pagination PaginationInfo="pagination" OnPageChanged="NavigateToPage" />
@@ -33,25 +52,21 @@
                 {
                     @foreach (var book in books)
                     {
-                        <a href="/bookdetails/@book.Title" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
+                        <a href="@($"/bookdetails/{book.Id}?returnUrl=" + Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri)))" class="col-6 col-sm-12 col-md-6 col-lg-4 col-xl-4 mh-25 mb-4 card-anchor">
                             <div class="card shadow-sm rounded">
                                 <div class="card-body">
-                                    <h5 class="card-title"><b>@TruncateTitle(book.Title, 50)</b></h5> <!-- Limit title to 50 characters -->
+                                    <h5 class="card-title"><b>@TruncateTitle(book.Title, 50)</b></h5> 
                                     <p class="card-subtitle mb-2 text-muted text-md-center">@book.Authors</p>
-                                    <img src="@book.Image" alt="Book Cover" class="img-fluid">
-                                </div>
-                                <div class="mb-2 text-center">
-                                    <a href="/reviews" class="text-decoration-none align-bottom">
-                                        <span class="oi oi-comment-square"></span>
-                                        Reviews
-                                    </a>
+                                    <img src="@book.CoverImage" alt="Book Cover" class="img-fluid">
                                 </div>
                                 <div class="card-footer text-muted d-flex justify-content-between flex-column flex-sm-row flex-xs-column">
                                     <div class="mb-md-0 text-center text-md-left">
-                                        <span>$@($"{book.Price:F3}")</span> <!-- Format price to 3 decimal places -->
+                                        <span>$@($"{book.Price:F3}")</span> 
                                     </div>
                                     <div class="mb-md-0 text-center text-md-left">
-                                        <span>Rating: @($"{book.RatingsCount}")</span>
+                                        <div class="d-flex align-items-center">
+                                            @RenderStars(book.AverageRating)
+                                        </div>
                                     </div>
                                     <div class="d-flex align-items-center mb-2 mb-md-0 flex-sm-row">
                                         <form @onclick:preventDefault @onsubmit:stopPropagation>
@@ -77,3 +92,31 @@
         </div>
     </div>
 </div>
+
+@functions {
+    private RenderFragment RenderStars(double rating) => builder =>
+    {
+        int seq = 0;
+        for (int i = 1; i <= 5; i++)
+        {
+            if (rating >= i)
+            {
+                builder.OpenElement(seq++, "i");
+                builder.AddAttribute(seq++, "class", "bi bi-star-fill text-warning");
+                builder.CloseElement();
+            }
+            else if (rating >= i - 0.5)
+            {
+                builder.OpenElement(seq++, "i");
+                builder.AddAttribute(seq++, "class", "bi bi-star-half text-warning");
+                builder.CloseElement();
+            }
+            else
+            {
+                builder.OpenElement(seq++, "i");
+                builder.AddAttribute(seq++, "class", "bi bi-star text-warning");
+                builder.CloseElement();
+            }
+        }
+    };
+}

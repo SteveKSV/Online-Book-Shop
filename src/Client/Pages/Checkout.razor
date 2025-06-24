@@ -1,153 +1,86 @@
 ﻿@page "/checkout"
-@using Client.Models
+@attribute [Authorize]
+@using Client.Models.Ordering
 @using Client.Services.Interfaces
-@inject NavigationManager Navigation
+@inject IOrderService OrderService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authStateProvider
 
-<div class="container py-5">
-    <h1 class="mb-4 text-center">Checkout</h1>
-    @if (IsOrderSuccessful)
-    {
-        <div class="alert alert-success text-center" role="alert">
-            <h4 class="alert-heading">Order Successful!</h4>
-            <p>Thank you for your purchase. You will be redirected shortly.</p>
-        </div>
-    }
-    else
-    {
-        @if (Basket.Items.Any())
-        {
-            <div class="row">
-                <div class="col-md-8">
-                    <h4>Delivery Information</h4>
-                    <EditForm Model="BasketCheckout" OnValidSubmit="PlaceOrder">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="text-danger" />
+<div class="d-flex justify-content-center align-items-start min-vh-100 pt-5 bg-light">
+    <div class="card shadow p-4" style="width: 100%; max-width: 600px;">
+        <EditForm Model="BasketCheckout" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-                        <div class="mb-3">
-                            <label for="firstName" class="form-label">First Name</label>
-                            <InputText id="firstName" class="form-control" @bind-Value="BasketCheckout.FirstName" />
-                            <ValidationMessage For="@(() => BasketCheckout.FirstName)" class="text-danger" />
-                        </div>
-                        <div class="mb-3">
-                            <label for="lastName" class="form-label">Last Name</label>
-                            <InputText id="lastName" class="form-control" @bind-Value="BasketCheckout.LastName" />
-                            <ValidationMessage For="@(() => BasketCheckout.LastName)" class="text-danger" />
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email Address *</label>
-                            <InputText id="email" class="form-control" @bind-Value="BasketCheckout.EmailAddress" />
-                            <ValidationMessage For="@(() => BasketCheckout.EmailAddress)" class="text-danger" />
-                        </div>
-                        <div class="mb-3">
-                            <label for="addressLine" class="form-label">Address Line *</label>
-                            <InputText id="addressLine" class="form-control" @bind-Value="BasketCheckout.AddressLine" />
-                            <ValidationMessage For="@(() => BasketCheckout.AddressLine)" class="text-danger" />
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <label for="country" class="form-label">Country *</label>
-                                <InputText id="country" class="form-control" @bind-Value="BasketCheckout.Country" />
-                                <ValidationMessage For="@(() => BasketCheckout.Country)" class="text-danger" />
-                            </div>
-                            <div class="col-md-4">
-                                <label for="state" class="form-label">State *</label>
-                                <InputText id="state" class="form-control" @bind-Value="BasketCheckout.State" />
-                                <ValidationMessage For="@(() => BasketCheckout.State)" class="text-danger" />
-                            </div>
-                            <div class="col-md-4">
-                                <label for="zipCode" class="form-label">Zip Code *</label>
-                                <InputText id="zipCode" class="form-control" @bind-Value="BasketCheckout.ZipCode" />
-                                <ValidationMessage For="@(() => BasketCheckout.ZipCode)" class="text-danger" />
-                            </div>
-                        </div>
+            <h3 class="text-center mb-4">Billing Information</h3>
 
-                        <h4 class="mt-4">Payment Information</h4>
-                        <div class="mb-3">
-                            <label for="cardName" class="form-label">Card Name *</label>
-                            <InputText id="cardName" class="form-control" @bind-Value="BasketCheckout.CardName" />
-                            <ValidationMessage For="@(() => BasketCheckout.CardName)" class="text-danger" />
-                        </div>
-                        <div class="mb-3">
-                            <label for="cardNumber" class="form-label">Card Number *</label>
-                            <InputText id="cardNumber" class="form-control" @bind-Value="BasketCheckout.CardNumber" />
-                            <ValidationMessage For="@(() => BasketCheckout.CardNumber)" class="text-danger" />
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="expiration" class="form-label">Expiration *</label>
-                                <InputText id="expiration" class="form-control" @bind-Value="BasketCheckout.Expiration" />
-                                <ValidationMessage For="@(() => BasketCheckout.Expiration)" class="text-danger" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="cvv" class="form-label">CVV *</label>
-                                <InputText id="cvv" class="form-control" @bind-Value="BasketCheckout.CVV" />
-                                <ValidationMessage For="@(() => BasketCheckout.CVV)" class="text-danger" />
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100 mt-4">Place Order</button>
-                    </EditForm>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header bg-primary text-white">Order Summary</div>
-                        <div class="card-body">
-                            @foreach (var item in Basket.Items)
-                            {
-                                <div class="d-flex justify-content-between">
-                                    <span>@item.ProductName (x@item.Quantity)</span>
-                                    <span><b>$@((item.Price * item.Quantity).ToString("F2"))</b></span>
-                                </div>
-                                <hr />
-                            }
-                            <hr />
-                            <div class="d-flex justify-content-between fw-bold">
-                                <span>Total:</span>
-                                <span>$@Basket.TotalPrice.ToString("F2")</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mb-3">
+                <label class="form-label">First Name *</label>
+                <InputText class="form-control" @bind-Value="BasketCheckout.FirstName" />
+                <ValidationMessage For="@(() => BasketCheckout.FirstName)" />
             </div>
-        }
-        else
-        {
-            <p>Your shopping cart is empty.</p>
-        }
-    }
+
+            <div class="mb-3">
+                <label class="form-label">Last Name *</label>
+                <InputText class="form-control" @bind-Value="BasketCheckout.LastName" />
+                <ValidationMessage For="@(() => BasketCheckout.LastName)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email Address *</label>
+                <InputText class="form-control" @bind-Value="BasketCheckout.EmailAddress" />
+                <ValidationMessage For="@(() => BasketCheckout.EmailAddress)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Address *</label>
+                <InputText class="form-control" @bind-Value="BasketCheckout.Address" />
+                <ValidationMessage For="@(() => BasketCheckout.Address)" />
+            </div>
+
+            <h3 class="text-center mb-4">Payment</h3>
+
+            <div class="mb-3">
+                <label class="form-label">Payment Method *</label>
+                <InputSelect class="form-select" @bind-Value="BasketCheckout.PaymentMethodId" onchange="OnPaymentMethodChanged">
+                    <option value="">-- Select Payment Method --</option>
+                    @foreach (var method in PaymentMethods)
+                    {
+                        <option value="@method.Id">@method.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => BasketCheckout.PaymentMethodId)" />
+            </div>
+
+            @if (IsCreditCardSelected)
+            {
+                <div class="mb-3">
+                    <label class="form-label">Card Number *</label>
+                    <InputText class="form-control" @bind-Value="BasketCheckout.CardNumber" />
+                    <ValidationMessage For="@(() => BasketCheckout.CardNumber)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Expiration (MM/YY or MM/YYYY) *</label>
+                    <InputText class="form-control" @bind-Value="BasketCheckout.Expiration" placeholder="MM/YY or MM/YYYY" />
+                    <ValidationMessage For="@(() => BasketCheckout.Expiration)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">CVV *</label>
+                    <InputText class="form-control" @bind-Value="BasketCheckout.CVV" />
+                    <ValidationMessage For="@(() => BasketCheckout.CVV)" />
+                </div>
+            }
+
+            @if (ShowCardValidationErrors)
+            {
+                <div class="alert alert-danger">
+                    Please fill all credit card fields.
+                </div>
+            }
+
+            <button class="btn btn-primary w-100 mt-3" type="submit">Submit Order</button>
+        </EditForm>
+    </div>
 </div>
-
-@code {
-    public bool IsOrderSuccessful { get; set; } = false;
-    public ShoppingCart Basket { get; set; } = new ShoppingCart();
-    [Inject] public IShoppingCartService Service { get; set; }
-    [Inject] public IOrderService OrderService { get; set; }
-    public BasketCheckout BasketCheckout { get; set; } = new BasketCheckout();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadBasket();
-    }
-
-    protected async Task LoadBasket()
-    {
-        Basket = await Service.GetCart();
-    }
-
-    private async Task PlaceOrder()
-    {
-        BasketCheckout.UserName = Basket.UserName;
-        BasketCheckout.Quantity = Basket.Items.Sum(item => item.Quantity);
-        BasketCheckout.TotalPrice = Basket.TotalPrice;
-
-        await OrderService.PlaceOrder(BasketCheckout);
-
-        IsOrderSuccessful = true;
-        StateHasChanged();
-        Navigation.NavigateTo("/checkout#successMessage");
-
-        await Task.Delay(5000);
-        Navigation.NavigateTo("/", true);
-    }
-}

@@ -32,10 +32,10 @@ namespace Order.Controllers
             return Ok(order);
         }
 
-        [HttpGet("GetByUsername/{userName}")]
-        public async Task<ActionResult> GetByUsername(string userName)
+        [HttpGet("GetByUserId/{userId}")]
+        public async Task<ActionResult> GetByUserId(Guid userId)
         {
-            var query = new GetOrdersByUsername(userName);
+            var query = new GetOrdersByUserId(userId);
             var orders = await _mediator.Send(query);
             return Ok(orders);
         }
@@ -67,17 +67,6 @@ namespace Order.Controllers
             }
 
             return BadRequest($"Order with Id {id} wasn't deleted");
-        }
-
-        [HttpPut("update-username/{oldUserName}/{newUserName}")]
-        public async Task<ActionResult> UpdateUserNameInOrders(string oldUserName, string newUserName)
-        {
-            if (await _mediator.Send(new UpdateUsername { OldUsername = oldUserName, NewUsername = newUserName }))
-            {
-                return Ok($"Old username {oldUserName} in orders was replaced by {newUserName}");
-            }
-
-            return BadRequest($"Failed to update username in orders");
         }
     }
 }

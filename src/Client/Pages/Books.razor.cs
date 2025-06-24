@@ -1,6 +1,6 @@
-﻿using Client.Models;
-using Client.Services.Interfaces;
-using Microsoft.AspNetCore.Components;
+﻿
+using Client.Models.Basket;
+using Client.Models.Catalog;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace Client.Pages
@@ -9,43 +9,87 @@ namespace Client.Pages
     {
         private List<BookModel> books = new();
         private string? searchTerm = null;
-        private string? sortOrder = null;
+        private string? searchInput = null;
+        private string? sortOrder = "none";
         private string? genresQuery = null;
+        private List<string> genres = new();
+        private bool IsAuthorized = false;
+
         private PaginationMetadata pagination = new PaginationMetadata();
 
+        protected override async Task OnInitializedAsync()
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity == null || !user.Identity.IsAuthenticated)
+            {
+                IsAuthorized = false;
+            }
+            else
+            {
+                IsAuthorized = true;
+            }
+        }
         protected override async Task OnParametersSetAsync()
         {
             var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+
             int page = 1;
-
-            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("page", out var pageParam) && int.TryParse(pageParam, out int parsedPage))
-            {
+            if (query.TryGetValue("page", out var pageParam) && int.TryParse(pageParam, out int parsedPage))
                 page = parsedPage;
-            }
 
-            // Extract search term from URL
-            if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("title", out var titleParam))
+            if (query.TryGetValue("title", out var titleParam))
             {
                 searchTerm = titleParam.ToString();
+                searchInput = searchTerm;
             }
 
+            if (query.TryGetValue("sortOrder", out var sortOrderParam))
+                sortOrder = sortOrderParam.ToString();
+
+            if (query.TryGetValue("genre", out var genreParam))
+            {
+                genresQuery = Uri.UnescapeDataString(genreParam);
+            }
+
+            if (!genres.Any())
+            {
+                genres = (await Service.Get("genre")).OrderBy(g => g).ToList();
+            }
             await LoadBooks(page);
         }
 
         private async Task NavigateToPage(int page)
         {
-            // Always load the books and update the current page state when a page is clicked
             if (page != pagination.CurrentPage)
             {
-                // Navigate only when user clicks on a page number
-                Navigation.NavigateTo($"/catalog?page={page}");
-                await LoadBooks(page);  // Load books for the clicked page
+                var queryParams = new Dictionary<string, string?>
+                {
+                    ["page"] = page.ToString(),
+                    ["title"] = searchTerm,
+                    ["sortOrder"] = sortOrder,
+                    ["genre"] = genresQuery
+                };
+
+                var uri = QueryHelpers.AddQueryString("/catalog", queryParams);
+                Navigation.NavigateTo(uri);
+                await LoadBooks(page);
             }
         }
-
         protected async Task LoadBooks(int page = 1)
         {
-            var queryString = $"?pageNumber={page}&pageSize=9&title={searchTerm}&sortOrder={sortOrder}&genre={genresQuery}";
+            string? encodedGenre = genresQuery;
+
+            // Перевірка: якщо genresQuery не містить '%', то кодуємо
+            if (!string.IsNullOrEmpty(genresQuery) && !genresQuery.Contains('%'))
+            {
+                encodedGenre = Uri.EscapeDataString(genresQuery);
+            }
+
+            
+            var queryString = $"?pageNumber={page}&pageSize=9&title={searchTerm}&sortOrder={sortOrder}&genre={encodedGenre}";
 
             var (loadedBooks, loadedPagination) = await Service.GetBooks(queryString);
             if (loadedBooks != null)
@@ -57,55 +101,71 @@ namespace Client.Pages
             StateHasChanged();
         }
 
-        private async Task SearchBooks(ChangeEventArgs e)
-    {
-        searchTerm = e.Value.ToString();
-        await LoadBooks();
-    }
+        private async Task UpdateUrlAndReload(int page = 1)
+        {
+            var queryParams = new Dictionary<string, string?>
+            {
+                ["page"] = page.ToString(),
+                ["title"] = searchTerm,
+                ["sortOrder"] = sortOrder,
+                ["genre"] = genresQuery
+            };
 
-    private async void SortBooks(string sortOrder)
-    {
-        this.sortOrder = sortOrder;
-        await LoadBooks(pagination.CurrentPage);
-    }
+            var uri = QueryHelpers.AddQueryString("/catalog", queryParams);
+            Navigation.NavigateTo(uri, forceLoad: false);
 
-    private async Task FilterBooksByGenre(string? queryString)
-    {
-        if (queryString == "clear")
-        {
-            genresQuery = null;
-            sortOrder = null;
-        }
-        else if (queryString != null)
-        {
-            genresQuery = queryString;
-        }
-        else
-        {
-            genresQuery = null;
+            await LoadBooks(page);
         }
 
-        await LoadBooks();
-    }
-
-    private async Task AddToCart(BookModel book)
-    {
-        var item = new ShoppingCartItem
+        private async Task ApplySearch()
         {
-            ProductId = book.Id,
-            ProductName = book.Title,
-            Price = book.Price,
-            Quantity = 1,
-            ProductImage = book.Image,
-        };
+            searchTerm = string.IsNullOrWhiteSpace(searchInput) ? null : searchInput;
+            await UpdateUrlAndReload(1);
+        }
 
-        await CartService.AddToCart(item);
-        StateHasChanged();
-    }
+        private async Task ClearSearch()
+        {
+            searchInput = null;
+            searchTerm = null;
+            await UpdateUrlAndReload(1);
+        }
 
-    private string TruncateTitle(string title, int maxLength)
-    {
-        return string.IsNullOrEmpty(title) || title.Length <= maxLength ? title : title.Substring(0, maxLength) + "...";
-    }
+        private async void SortBooks(string sortOrder)
+        {
+            this.sortOrder = sortOrder;
+            await UpdateUrlAndReload(1);
+        }
+
+        private async Task FilterBooksByGenre(string? queryString)
+        {
+            genresQuery = queryString == "clear" ? null : queryString;
+            await UpdateUrlAndReload(1);
+        }
+
+        private async Task AddToCart(BookModel book)
+        {
+            if (!IsAuthorized)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var item = new ShoppingCartItem
+            {
+                BookId = book.Id,
+                Title = book.Title,
+                Price = book.Price,
+                Quantity = 1,
+                CoverImage = book.CoverImage,
+            };
+
+            await CartService.AddOrUpdateItem(item.BookId, item.Quantity, item.Price);
+            StateHasChanged();
+        }
+
+        private string TruncateTitle(string title, int maxLength)
+        {
+            return string.IsNullOrEmpty(title) || title.Length <= maxLength ? title : title.Substring(0, maxLength) + "...";
+        }
     }
 }

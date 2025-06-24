@@ -4,32 +4,45 @@
 
 <div>
     <div class="d-flex flex-column flex-sm-column align-content-sm-center justify-content-around mb-medium">
+        <!-- Сортування за ціною -->
         <div>
             <h6 class="filter-header">Sort by Price</h6>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none" checked @onclick='() => SortByPrice("none")'>
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDefault" value="none"
+                       checked="@("none" == SortOrder)"
+                       @onclick='() => SortByPrice("none")'>
                 <label class="custom-radio-label" for="sortPriceDefault">Default</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc" @onclick='() => SortByPrice("asc")'>
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceAsc" value="asc"
+                       checked="@("asc" == SortOrder)"
+                       @onclick='() => SortByPrice("asc")'>
                 <label class="custom-radio-label" for="sortPriceAsc">Low to High</label>
             </div>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDesc" value="desc" @onclick='() => SortByPrice("desc")'>
+                <input class="form-check-input" type="radio" name="sortPrice" id="sortPriceDesc" value="desc"
+                       checked="@("desc" == SortOrder)"
+                       @onclick='() => SortByPrice("desc")'>
                 <label class="custom-radio-label" for="sortPriceDesc">High to Low</label>
             </div>
         </div>
+
+        <!-- Фільтрація за жанром -->
         <div>
             <h6 class="filter-header">Filter by Genre</h6>
             <div class="form-check">
-                <input class="form-check-input" type="radio" name="genreFilter" id="genreAll" value="" @onclick="() => UpdateFilteredBooksByGenre(null)" checked>
+                <input class="form-check-input" type="radio" name="genreFilter" id="genreAll" value=""
+                       checked="@string.IsNullOrEmpty(SelectedGenre)"
+                       @onclick="() => UpdateFilteredBooksByGenre(null)">
                 <label class="custom-radio-label" for="genreAll">All Genres</label>
             </div>
             @foreach (var genre in Genres)
             {
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="genreFilter" id="@($"genre_{genre}")"
-                           value="@genre" @onclick="() => UpdateFilteredBooksByGenre(genre)">
+                           value="@genre"
+                           checked="@(genre == SelectedGenre)"
+                           @onclick="() => UpdateFilteredBooksByGenre(genre)">
                     <label class="custom-radio-label" for="@($"genre_{genre}")">@genre</label>
                 </div>
             }
@@ -41,40 +54,42 @@
     </div>
 </div>
 
-
 @code {
+    [Parameter]
+    public List<string> Genres { get; set; } = new();
+    [Parameter]
+    public string? SelectedGenre { get; set; }
+    [Parameter]
+    public string? SortOrder { get; set; }
+
     [Parameter]
     public EventCallback<string> OnSort { get; set; }
 
     [Parameter]
     public EventCallback<string?> OnFilterByGenres { get; set; }
 
-    public List<string> Genres { get; set; } = new List<string>();
-
-    [Inject] private ICatalogService Service { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        Genres = (await Service.Get("genre")).OrderBy(g => g).ToList(); // Sort genres alphabetically
-        StateHasChanged();
-    }
-
     private async Task SortByPrice(string sortOrder)
     {
-        await OnSort.InvokeAsync(sortOrder);
+        if (SortOrder != sortOrder)
+        {
+            await OnSort.InvokeAsync(sortOrder);
+        }
     }
 
     private async Task UpdateFilteredBooksByGenre(string? selectedGenre)
     {
-        // Encode the genre to prevent issues with special characters
-        string queryString = selectedGenre != null ? Uri.EscapeDataString(selectedGenre) : null;
-        await OnFilterByGenres.InvokeAsync(queryString);
+        string? queryString = selectedGenre != null ? Uri.EscapeDataString(selectedGenre) : null;
+        if (SelectedGenre != selectedGenre)
+        {
+            await OnFilterByGenres.InvokeAsync(queryString);
+        }
     }
 
     private async Task ClearFilters()
     {
-        await JSRuntime.InvokeAsync<object>("resetRadioButtons", null); // Ensure to reset any radio button states
+        // Скидання вибраних радіо-кнопок через JS, якщо потрібно
+        await JSRuntime.InvokeAsync<object>("resetRadioButtons", null);
         await OnFilterByGenres.InvokeAsync("clear");
+        await OnSort.InvokeAsync("none");
     }
 }
-

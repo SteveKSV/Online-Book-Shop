@@ -2,58 +2,59 @@
 using System.Reflection;
 using System.Threading.Tasks;
 using Catalog.Managers.Interfaces;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace Catalog.Managers
 {
     public class GenericManager<T> : IGenericManager<T> where T : class
     {
-        protected readonly IMongoCollection<T> _collection;
-        protected readonly MongoDbContext _context;
-        public GenericManager(MongoDbContext context)
+        protected readonly AppDbContext _context;
+        protected readonly DbSet<T> _dbSet;
+
+        public GenericManager(AppDbContext context)
         {
-            _collection = context.Database.GetCollection<T>(typeof(T).Name.ToLower());
             _context = context;
+            _dbSet = context.Set<T>();
         }
 
         public async Task CreateEntity(T entity)
         {
-            await _collection.InsertOneAsync(entity);
+            await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteEntity(string id)
+        public async Task<bool> DeleteEntity(Guid id)
         {
             PropertyInfo idProperty = typeof(T).GetProperty("Id");
             if (idProperty == null)
-            {
                 throw new InvalidOperationException("The entity does not have an 'Id' property.");
-            }
 
-            var filter = Builders<T>.Filter.Eq("Id", id);
-            var deleteResult = await _collection.DeleteOneAsync(filter);
+            var entity = await _dbSet.FindAsync(id);
+            if (entity == null)
+                return false;
 
-            return deleteResult.IsAcknowledged && deleteResult.DeletedCount > 0;
+            _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> UpdateEntity(T entity)
         {
             PropertyInfo idProperty = typeof(T).GetProperty("Id");
             if (idProperty == null)
-            {
                 throw new InvalidOperationException("The entity does not have an 'Id' property.");
-            }
 
             var entityId = idProperty.GetValue(entity);
             if (entityId == null)
-            {
                 throw new InvalidOperationException("The 'Id' property value is null.");
-            }
 
-            var filter = Builders<T>.Filter.Eq("Id", entityId);
-            var updateResult = await _collection.ReplaceOneAsync(filter, entity);
+            var existing = await _dbSet.FindAsync(entityId);
+            if (existing == null)
+                return false;
 
-            return updateResult.IsAcknowledged && updateResult.ModifiedCount > 0;
+            _context.Entry(existing).CurrentValues.SetValues(entity);
+            await _context.SaveChangesAsync();
+            return true;
         }
-
     }
 }

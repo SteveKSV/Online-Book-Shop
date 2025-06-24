@@ -65,6 +65,15 @@ main {
     transform: scale(1.1);
     transition: all 0.3s ease-in-out;
 }
+
+.nav-link.username.active {
+    font-weight: bold;
+    color: #ffc107 !important;
+    border-bottom: 3px solid #17a2b8;
+    transform: scale(1.1);
+    transition: all 0.3s ease-in-out;
+}
+
 @media (max-width: 640.98px) {
     .top-row .welcome-message {
         display: none;
@@ -77,6 +86,40 @@ main {
     .top-row.auth {
         justify-content: space-between;
     }
+}
+.user-toggle {
+    gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Звичайний стан */
+.navbar .nav-link.user-toggle {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* При наведенні */
+.navbar .nav-link.user-toggle:hover,
+.navbar .nav-link.user-toggle:focus,
+.navbar .nav-link.user-toggle.show {
+    color: #fff;
+}
+
+/* Активна іконка (dropdown open) */
+.navbar .dropdown.show .nav-link.user-toggle {
+    color: #fff;
+}
+
+.admin-badge {
+    position: absolute;
+    top: 0;
+    right: -4px;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border: 2px solid white;
+    border-radius: 50%;
 }
 
 @media (min-width: 699px) {

@@ -15,10 +15,6 @@
       ],
       "UpstreamPathTemplate": "/catalog",
       "UpstreamHttpMethod": [ "GET", "PUT", "DELETE", "POST" ]
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "IdentityApiKey",
-      //  "AllowedScopes": [ "openid", "Catalog.read" ]
-      //}
     },
     {
       "DownstreamPathTemplate": "/api/book/{id}",
@@ -45,7 +41,7 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/book/GetBooksByAuthor/{authorName}",
+      "DownstreamPathTemplate": "/api/book/{bookId}/comments",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -53,43 +49,7 @@
           "Port": 5000
         }
       ],
-      "UpstreamPathTemplate": "/catalog/GetBooksByAuthor/{authorName}",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/book/GetBooksByPublisher/{publisher}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5000
-        }
-      ],
-      "UpstreamPathTemplate": "/catalog/GetBooksByPublisher/{publisher}",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/book/GetBooksByGenre/{genre}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5000
-        }
-      ],
-      "UpstreamPathTemplate": "/catalog/GetBooksByGenre/{genre}",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/book/GetBooksCount",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5000
-        }
-      ],
-      "UpstreamPathTemplate": "/catalog/GetBooksCount",
+      "UpstreamPathTemplate": "/catalog/{bookId}/comments",
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
@@ -105,7 +65,7 @@
       "UpstreamHttpMethod": [ "GET" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Language",
+      "DownstreamPathTemplate": "/api/comment/{id}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -113,62 +73,144 @@
           "Port": 5000
         }
       ],
-      "UpstreamPathTemplate": "/language",
-      "UpstreamHttpMethod": [ "GET" ]
-    },
-
-
-    // Basket.API
-    {
-      "DownstreamPathTemplate": "/api/Basket/{userName}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5001
-        }
-      ],
-      "UpstreamPathTemplate": "/basket/{userName}",
+      "UpstreamPathTemplate": "/comment/{id}",
       "UpstreamHttpMethod": [ "GET", "DELETE" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Basket/",
+      "DownstreamPathTemplate": "/api/comment/",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5001
+          "Port": 5000
         }
       ],
-      "UpstreamPathTemplate": "/basket/",
+      "UpstreamPathTemplate": "/comment/",
       "UpstreamHttpMethod": [ "POST" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}",
+      "DownstreamPathTemplate": "/api/comment/update-comment",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
           "Host": "localhost",
-          "Port": 5001
+          "Port": 5000
         }
       ],
-      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}",
-      "UpstreamHttpMethod": [ "DELETE" ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/Basket/{userName}/items/{productId}/quantity/{quantity}",
-      "DownstreamScheme": "https",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5001
-        }
-      ],
-      "UpstreamPathTemplate": "/basket/{userName}/items/{productId}/quantity/{quantity}",
+      "UpstreamPathTemplate": "/comment/update-comment",
       "UpstreamHttpMethod": [ "PUT" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Basket/Checkout",
+      "DownstreamPathTemplate": "/api/rating/",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/rating/",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/rating/{bookId}/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/rating/{bookId}/{userId}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Recommendation/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/Recommendation/{userId}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Recommendation/top",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/Recommendation/top",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Recommendation/new",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5000
+        }
+      ],
+      "UpstreamPathTemplate": "/Recommendation/new",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    // Basket.API
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userId}",
+      "UpstreamHttpMethod": [ "GET", "DELETE", "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userId}/items",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userId}/items",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userId}/items/{bookId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userId}/items/{bookId}",
+      "UpstreamHttpMethod": [ "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/{userId}/items/{bookId}/quantity/{quantity}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5001
+        }
+      ],
+      "UpstreamPathTemplate": "/basket/{userId}/items/{bookId}/quantity/{quantity}",
+      "UpstreamHttpMethod": [ "PUT" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Basket/checkout",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -180,7 +222,7 @@
       "UpstreamHttpMethod": [ "POST" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Basket/{oldUserName}/update-username/{newUserName}",
+      "DownstreamPathTemplate": "/api/Basket/{userId}/count",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -188,9 +230,10 @@
           "Port": 5001
         }
       ],
-      "UpstreamPathTemplate": "/basket/{oldUserName}/update-username/{newUserName}",
-      "UpstreamHttpMethod": [ "PUT" ]
+      "UpstreamPathTemplate": "/basket/{userId}/count",
+      "UpstreamHttpMethod": [ "GET" ]
     },
+
     // Order.API
     {
       "DownstreamPathTemplate": "/api/Order/",
@@ -217,7 +260,7 @@
       "UpstreamHttpMethod": [ "GET", "DELETE" ]
     },
     {
-      "DownstreamPathTemplate": "/api/Order/update-username/{oldUserName}/{newUserName}",
+      "DownstreamPathTemplate": "/api/Order/GetByUserId/{userId}",
       "DownstreamScheme": "https",
       "DownstreamHostAndPorts": [
         {
@@ -225,8 +268,97 @@
           "Port": 5003
         }
       ],
-      "UpstreamPathTemplate": "/order/update-username/{oldUserName}/{newUserName}",
-      "UpstreamHttpMethod": [ "PUT" ]
+      "UpstreamPathTemplate": "/order/GetByUserId/{userId}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/PaymentMethod/",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5003
+        }
+      ],
+      "UpstreamPathTemplate": "/paymentMethod/",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+
+    // Identity.API
+    {
+      "DownstreamPathTemplate": "/api/Auth/signup",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5004
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/signup",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Auth/signin",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5004
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/signin",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/Auth/updateUser",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5004
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/updateUser",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Auth",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5004
+        }
+      ],
+      "UpstreamPathTemplate": "/auth",
+      "UpstreamHttpMethod": [ "GET" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/Auth/{userId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5004
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/{userId}",
+      "UpstreamHttpMethod": [ "GET", "DELETE" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin"
+      }
     }
   ]
 }

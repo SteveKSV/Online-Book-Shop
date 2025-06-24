@@ -1,32 +1,9 @@
-﻿@* <div class="@NavMenuCssClass" @onclick="ToggleNavMenu"> *@
-<nav class="d-flex align-items-center gap-3 h-100">
-    <div class="nav-item px-3 d-flex align-items-center h-100 flex-column flex-sm-row">
-        <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="" Match="NavLinkMatch.All">
-            Home
-        </NavLink>
-        <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="catalog" Match="NavLinkMatch.All">
-            Catalog
-        </NavLink>
-        <AuthorizeView Roles="Administrator">
-            <Authorized>
-                <NavLink class="nav-link d-flex align-items-center h-100 me-3" href="administrator" Match="NavLinkMatch.All">
-                    Admin page
-                </NavLink>
-            </Authorized>
-        </AuthorizeView>
-    </div>
+﻿<nav class="nav-item d-flex flex-column flex-lg-row justify-content-center align-items-center gap-2 text-center">
+    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+    <NavLink class="nav-link" href="catalog" Match="NavLinkMatch.Prefix">Catalog</NavLink>
+    <AuthorizeView>
+        <Authorized>
+            <NavLink class="nav-link" href="orders" Match="NavLinkMatch.All">Your orders</NavLink>
+        </Authorized>
+    </AuthorizeView>
 </nav>
-
-@* </div> *@
-@* 
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
- *@

@@ -1,7 +1,7 @@
-﻿@page "/bookdetails/{bookTitle}"
+﻿@page "/bookdetails/{BookId:guid}"
 
 @using Client.Models
-@inject NavigationManager Navigation
+@using Client.Shared
 
 <div class="container py-5">
     <button class="btn btn-outline-secondary mb-3" @onclick="GoBack">
@@ -13,7 +13,7 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="card shadow-sm">
-                    <img src="@Book.Image" class="img-fluid card-img-top" alt="Book Cover" style="max-width: 100%; height: 500px;" />
+                    <img src="@Book.CoverImage" class="img-fluid card-img-top" alt="Book Cover" style="max-width: 100%; height: 500px;" />
                     <div class="card-body text-center">
                         <h3 class="card-title">@Book.Title</h3>
                         <p class="card-text fw-bold text-primary">$@String.Format("{0:F2}", Book.Price)</p>
@@ -29,18 +29,38 @@
                     <h4 class="mb-3">Book Details</h4>
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item"><strong>Author:</strong> @Book.Authors</li>
-                        <li class="list-group-item"><strong>Genre:</strong> @Book.Genres</li>
+                        <li class="list-group-item"><strong>Genre:</strong> @Book.GenreName</li>
                         <li class="list-group-item"><strong>Publisher:</strong> @Book.Publisher</li>
-                        <li class="list-group-item"><strong>Publication Date:</strong> @Book.PublicationDate.ToString("dd/MM/yyyy")</li>
-                        <li class="list-group-item"><strong>Ratings Count:</strong> @Book.RatingsCount</li>
+                        <li class="list-group-item"><strong>Publication Date:</strong> @Book.PublishedAt.ToString()</li>
+                        <li class="list-group-item">
+                            <span class="ms-2">@RenderStars(Book.AverageRating)</span>
+                            <span class="ms-2 text-muted">@($"{Book.AverageRating:F1}")</span>
+                        </li>
                     </ul>
 
+                    @if (IsLoggedIn)
+                    {
+                        <div class="my-3">
+                            <h6>Your Rating:</h6>
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                var starValue = i;
+                                <i class="bi @(starValue <= SelectedRating ? "bi-star-fill" : "bi-star") text-warning me-1"
+                                   style="cursor:pointer;"
+                                   @onclick="@(() => Rate(starValue))"></i>
+                            }
+                            @if (RatingStatus != null)
+                            {
+                                <div class="mt-2 text-success">@RatingStatus</div>
+                            }
+                        </div>
+                    }
                     <h5 class="mt-4">Description</h5>
                     <p class="text-muted">@Book.Description</p>
 
-                    <div class="reviews mt-4">
+                   <div class="reviews mt-4">
                         <h5>Reviews</h5>
-                        <p class="text-secondary">There are no reviews now.</p>
+                        <CommentsComponent BookId="Book.Id" IsLoggedIn="IsLoggedIn" />
                     </div>
                 </div>
             </div>
@@ -53,3 +73,4 @@
         </div>
     }
 </div>
+

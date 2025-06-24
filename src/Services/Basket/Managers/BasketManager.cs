@@ -1,76 +1,116 @@
-﻿using Basket.API.GrpcServices;
+﻿using Basket.Data;
+using Basket.DTO;
 using Basket.Entities;
 using Basket.Managers.Interfaces;
-using Microsoft.Extensions.Caching.Distributed;
-using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace Basket.Managers
 {
     public class BasketManager : IBasketManager
     {
-        private readonly IDistributedCache _redisCache;
-        public BasketManager(IDistributedCache cache)
+        private readonly BasketDbContext _context;
+        private readonly ICatalogService _catalogService;
+
+        public BasketManager(BasketDbContext context, ICatalogService catalogService)
         {
-            _redisCache = cache ?? throw new ArgumentNullException(nameof(cache));
-        }
-        public async Task<ShoppingCart> GetBasket(string userName)
-        {
-            var basket = await _redisCache.GetStringAsync(userName);
-            if (String.IsNullOrEmpty(basket))
-                return null;
-            return JsonConvert.DeserializeObject<ShoppingCart>(basket);
+            _context = context;
+            _catalogService = catalogService;
         }
 
-        public async Task<ShoppingCart> UpdateBasket(ShoppingCart basket)
+        public async Task<BasketDTO> GetBasket(Guid userId)
         {
-            await _redisCache.SetStringAsync(basket.UserName, JsonConvert.SerializeObject(basket));
+            var items = await _context.BasketItems
+                .Where(x => x.UserId == userId)
+                .ToListAsync();
 
-            return await GetBasket(basket.UserName);
+            var result = new List<BasketItemDetailedDTO>();
+
+            foreach (var item in items)
+            {
+                var book = await _catalogService.GetBookByIdAsync(item.BookId);
+
+                result.Add(new BasketItemDetailedDTO
+                {
+                    BookId = item.BookId,
+                    Title = book?.Title ?? "Unknown",
+                    Authors = book?.Authors ?? "Unknown",
+                    Quantity = item.Quantity,
+                    Price = item.Price,
+                    CoverImage = book?.CoverImage ?? "https://www.forewordreviews.com/books/covers/the-official-librarian.jpg"
+                });
+            }
+
+            var total = result.Sum(x => x.Price * x.Quantity);
+
+            return new BasketDTO
+            {
+                Items = result,
+                TotalPrice = total
+            };
         }
 
-        public async Task<ShoppingCart> UpdateItemQuantity(string userName, string productId, int quantity)
+        public async Task<BasketItem> AddOrUpdateItem(Guid userId, Guid bookId, int quantity, decimal price)
         {
-            var basket = await GetBasket(userName);
-            if (basket == null) return null;
+            var item = await _context.BasketItems
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.BookId == bookId);
 
-            var item = basket.Items.FirstOrDefault(i => i.ProductId == productId);
-            if (item == null) return basket;
+            if (item == null)
+            {
+                item = new BasketItem
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    BookId = bookId,
+                    Quantity = quantity,
+                    Price = price,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.BasketItems.Add(item);
+            }
+            else
+            {
+                item.Quantity += quantity;
+                item.Price = price;
+                item.UpdatedAt = DateTime.UtcNow;
+                _context.BasketItems.Update(item);
+            }
+
+            await _context.SaveChangesAsync();
+            return item;
+        }
+
+        public async Task<BasketItem> UpdateItemQuantity(Guid userId, Guid bookId, int quantity)
+        {
+            var item = await _context.BasketItems
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.BookId == bookId);
+            if (item == null) return null;
 
             item.Quantity = quantity;
+            item.UpdatedAt = DateTime.UtcNow;
 
-            return await UpdateBasket(basket);
-        }
-        public async Task DeleteBasket(string userName)
-        {
-            await _redisCache.RemoveAsync(userName);
+            await _context.SaveChangesAsync();
+            return item;
         }
 
-        public async Task<ShoppingCart> RemoveItemFromBasket(string userName, string productId)
+        public async Task DeleteBasket(Guid userId)
         {
-            var basket = await GetBasket(userName);
-            if (basket == null)
-            {
-                return null;
-            }
-
-            var itemToRemove = basket.Items.FirstOrDefault(item => item.ProductId == productId);
-            if (itemToRemove != null)
-            {
-                basket.Items.Remove(itemToRemove);
-                await UpdateBasket(basket);
-            }
-
-            return basket;
+            var items = _context.BasketItems.Where(x => x.UserId == userId);
+            _context.BasketItems.RemoveRange(items);
+            await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateUserNameInBasket(string oldUserName, string newUserName)
+        public async Task<BasketDTO> RemoveItemFromBasket(Guid userId, Guid bookId)
         {
-            var basket = await GetBasket(oldUserName);
-            if (basket != null)
+            var item = await _context.BasketItems
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.BookId == bookId);
+            if (item != null)
             {
-                basket.UserName = newUserName;
-                await UpdateBasket(basket);
+                _context.BasketItems.Remove(item);
+                await _context.SaveChangesAsync();
             }
+            return await GetBasket(userId);
         }
     }
+
 }

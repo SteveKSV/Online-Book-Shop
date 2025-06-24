@@ -2,6 +2,7 @@
 @using Client.Services.Interfaces
 @using Microsoft.AspNetCore.Components
 @using System.Security.Claims
+@implements IDisposable
 
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -15,54 +16,81 @@
                 <a href="/" class="navbar-brand d-flex align-items-center">
                     <span class="ms-2">WhatToRead</span>
                 </a>
-                <AuthorizeView>
-                    <Authorized>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
-                            <div class="d-flex align-items-center">
-                                @if (context.User.IsInRole("Administrator"))
-                                {
-                                    <span class="badge bg-primary ms-2">Administrator</span>
-                                }
-                                <a href="/Identity/Account/Manage" class="nav-item nav-link">Hello, @context.User.Identity?.Name!</a>
-                            </div>
-                        </div>
-                    </Authorized>
-                </AuthorizeView>
-                <div>
-                    <a href="cart" class="nav-item nav-link @(NavigationManager.Uri.Contains("cart") ? "active" : "")">
-                        <span class="oi oi-cart"></span>
-                        Cart
-                        @if (ItemCount > 0)
-                        {
-                            <span class="cart-badge">@ItemCount</span>
-                        }
-                    </a>
-                </div>
-                <!-- Navbar Toggler for mobile -->
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <!-- Collapsible Navbar Links -->
-                <div class="collapse navbar-collapse" id="navbarCollapse">
-                    <div class="navbar-nav ms-auto d-flex align-items-center justify-content-between">
-                        <div><NavMenu /></div>
 
-                        <AuthorizeView>
-                            <Authorized>
-                                <form method="post" action="Identity/Account/LogOut" class="d-inline">
-                                    <button type="submit" class="btn btn-link nav-link">Log out</button>
-                                </form>
-                            </Authorized>
-                            <NotAuthorized>
-                                <div class="d-flex flex-column flex-sm-row">
-                                    <a href="Identity/Account/Register" class="nav-item nav-link">Register</a>
-                                    <a href="Identity/Account/Login" class="nav-item nav-link">Log in</a>
-                                </div>
-                            </NotAuthorized>
-                        </AuthorizeView>
+                <div class="collapse navbar-collapse" id="navbarCollapse">
+                    <div class="navbar-nav w-100 d-flex flex-column flex-lg-row justify-content-between align-items-center gap-3">
+
+                        <!-- LEFT (NavMenu) -->
+                        <div class="d-flex flex-column flex-lg-row align-items-center justify-content-center gap-2 text-center">
+                            <NavMenu />
+                        </div>
+
+
+                        <!-- RIGHT (User, Cart, Dropdown) -->
+                        <div class="d-flex flex-column flex-lg-row align-items-center justify-content-center gap-2 text-center">
+                            <AuthorizeView>
+                                <Authorized Context="context">
+                                    <!-- Dropdown -->
+                                    <div class="dropdown">
+                                        <a class="nav-link dropdown-toggle d-flex align-items-center flex-nowrap gap-2 user-toggle" href="#" role="button"
+                                           data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="bi bi-person-circle" style="font-size: 1.5rem; position: relative;">
+                                                @if (context.User.IsInRole("Admin"))
+                                                {
+                                                    <span class="admin-badge"></span>
+                                                }
+                                            </i>
+                                            <span class="text-nowrap">@GetUserName(context.User)</span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="update-user">My Profile</a></li>
+                                            @if (context.User.IsInRole("Admin"))
+                                            {
+                                                <li><a class="dropdown-item" href="administrator">Admin Panel</a></li>
+                                            }
+                                            <li class="d-lg-none">
+                                                <a class="dropdown-item" href="cart">
+                                                    <span class="oi oi-cart me-2"></span> Cart
+                                                    @if (ItemCount > 0)
+                                                    {
+                                                        <span class="cart-badge ms-1">@ItemCount</span>
+                                                    }
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider" /></li>
+                                            <li><a class="dropdown-item text-danger" href="logout">Log out</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Cart - для великих екранів -->
+                                    <div class="d-none d-lg-flex">
+                                        <a href="cart" class="nav-item nav-link @(NavigationManager.Uri.Contains("cart") ? "active" : "")">
+                                            <span class="oi oi-cart"></span>
+                                            Cart
+                                            @if (ItemCount > 0)
+                                            {
+                                                <span class="cart-badge ms-1">@ItemCount</span>
+                                            }
+                                        </a>
+                                    </div>
+                                </Authorized>
+
+                                <NotAuthorized>
+                                    <div class="d-flex flex-column flex-sm-row gap-2 text-center">
+                                        <a href="register" class="nav-item nav-link">Register</a>
+                                        <a href="login" class="nav-item nav-link">Log in</a>
+                                    </div>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                        </div>
+
                     </div>
                 </div>
+
             </div>
         </nav>
 
@@ -73,6 +101,8 @@
 </div>
 
 @code {
+    private ClaimsPrincipal user;
+
     [Inject] public IShoppingCartService ShoppingCartService { get; set; }
     public int ItemCount { get; set; }
 
@@ -81,18 +111,48 @@
     protected override async Task OnInitializedAsync()
     {
         authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        user = authenticationState.User;
+
         ShoppingCartService.CartChanged += OnCartChanged;
-        await UpdateItemCount();
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            await UpdateItemCount();
+        }
+    }
+
+    private string GetUserName(ClaimsPrincipal user)
+    {
+        if (user == null)
+            return "Guest";
+
+        var usernameClaim = user.FindFirst("username");
+        if (usernameClaim != null)
+            return usernameClaim.Value;
+
+        return user.Identity?.Name ?? "User";
     }
 
     private async Task UpdateItemCount()
     {
-        ItemCount = await ShoppingCartService.GetItemCountAsync();
-        StateHasChanged();
+        try
+        {
+            ItemCount = await ShoppingCartService.GetItemCountAsync();
+            StateHasChanged();
+        }
+        catch
+        {
+            ItemCount = 0;
+        }
     }
 
-    private async void OnCartChanged(object sender, EventArgs args)
+    private async void OnCartChanged(object? sender, EventArgs args)
     {
-        await UpdateItemCount();
+        await InvokeAsync(UpdateItemCount);
+    }
+
+    public void Dispose()
+    {
+        ShoppingCartService.CartChanged -= OnCartChanged;
     }
 }

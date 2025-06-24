@@ -1,8 +1,10 @@
-﻿using Application.Features.Orders.Commands;
+﻿using Application.Dtos;
+using Application.Features.Orders.Commands;
 using AutoMapper;
 using EventBusMessages.Events;
 using MassTransit;
 using MediatR;
+using System.Globalization;
 
 namespace Order
 {
@@ -23,45 +25,77 @@ namespace Order
         {
             try
             {
-                //var command = _mapper.Map<CheckoutOrder>(context.Message);
-                var basketCheckoutEvent = context.Message;
+                var basketCheckout = context.Message;
+
+                int expiryMonth = 0;
+                int expiryYear = 0;
+
+                var formats = new[] { "MM/yy", "MM/yyyy" };
+                if (DateTime.TryParseExact(basketCheckout.Expiration, formats,
+                                           CultureInfo.InvariantCulture,
+                                           DateTimeStyles.None, out var parsedDate))
+                {
+                    expiryMonth = parsedDate.Month;
+                    expiryYear = parsedDate.Year;
+                }
+
+                CardPaymentDto? cardPaymentDto = null;
+
+                if (!string.IsNullOrEmpty(basketCheckout.CardNumber)
+                    && expiryMonth > 0
+                    && expiryYear > 0
+                    && !string.IsNullOrEmpty(basketCheckout.CVV))
+                {
+                    cardPaymentDto = new CardPaymentDto
+                    {
+                        CardNumber = basketCheckout.CardNumber,
+                        ExpiryMonth = expiryMonth,
+                        ExpiryYear = expiryYear,
+                        Cvv = basketCheckout.CVV
+                    };
+                }
+
                 var command = new CheckoutOrder
                 {
-                    OrderDto = new Application.Dtos.AddOrderDto
+                    OrderDto = new AddOrderDto
                     {
-                        UserName = basketCheckoutEvent.OrderDto.UserName,
-                        TotalPrice = basketCheckoutEvent.OrderDto.TotalPrice,
-                        Quantity = basketCheckoutEvent.OrderDto.Quantity,
-                        FirstName = basketCheckoutEvent.OrderDto.FirstName,
-                        LastName = basketCheckoutEvent.OrderDto.LastName,
-                        EmailAddress = basketCheckoutEvent.OrderDto.EmailAddress,
-                        AddressLine = basketCheckoutEvent.OrderDto.AddressLine,
-                        Country = basketCheckoutEvent.OrderDto.Country,
-                        State = basketCheckoutEvent.OrderDto.State,
-                        ZipCode = basketCheckoutEvent.OrderDto.ZipCode,
-                        CardName = basketCheckoutEvent.OrderDto.CardName,
-                        CardNumber = basketCheckoutEvent.OrderDto.CardNumber,
-                        Expiration = basketCheckoutEvent.OrderDto.Expiration,
-                        CVV = basketCheckoutEvent.OrderDto.CVV,
-                        PaymentMethod = basketCheckoutEvent.OrderDto.PaymentMethod,
-                        Items = basketCheckoutEvent.OrderDto.Items.Select(i => new Application.Dtos.OrderItemDto
+                        UserId = basketCheckout.UserId,
+                        TotalPrice = basketCheckout.TotalPrice,
+                        Quantity = basketCheckout.Quantity,
+
+                        FirstName = basketCheckout.FirstName,
+                        LastName = basketCheckout.LastName,
+                        EmailAddress = basketCheckout.EmailAddress,
+                        Address = basketCheckout.Address,
+
+                        StatusId = Guid.Parse("F23B2522-7D48-F011-AFA4-38D57A8AEC11"),
+
+                        Payment = new PaymentDto
                         {
-                            ProductId = i.ProductId,
+                            PaymentMethodId = basketCheckout.PaymentMethodId,
+                            Amount = basketCheckout.TotalPrice,
+                            CardPayment = cardPaymentDto
+                        },
+
+                        Items = basketCheckout.Items.Select(i => new OrderItemDto
+                        {
+                            BookId = i.BookId,
                             Quantity = i.Quantity,
                             Price = i.Price
-                        }).ToList()
+                        }).ToList(),
+
                     }
                 };
 
                 var result = await _mediator.Send(command);
 
-                _logger.LogInformation("BasketCheckoutEvent consumed successfully. Created Order Id : {newOrderId}", result);
+                _logger.LogInformation("BasketCheckoutEvent consumed successfully. Created Order Id: {newOrderId}", result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while consuming BasketCheckoutEvent");
-                Console.WriteLine($"Error: {ex.Message}");
             }
         }
+
     }
 }
