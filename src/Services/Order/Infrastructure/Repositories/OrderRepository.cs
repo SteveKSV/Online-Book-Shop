@@ -9,148 +9,193 @@ namespace Infrastructure.Repositories
     public class OrderRepository : IOrderRepository
     {
         private readonly OrderContext _dbContext;
+
         public OrderRepository(OrderContext dbContext)
         {
-
             _dbContext = dbContext;
-
         }
+
         public async Task<List<Order>> GetAllOrders()
         {
-            List<Order> orders = await _dbContext.Orders.Include(o => o.Items).ToListAsync();
+            var orders = await _dbContext.Orders
+                .Include(o => o.Status)
+                .Include(o => o.Payment)
+                    .ThenInclude(p => p.PaymentMethod)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Book)
+                .ToListAsync();
 
-            return orders ?? throw new Exception($"GetAllOrders - Order Repository -> not found");
+            return orders ?? throw new Exception($"No orders found.");
         }
 
         public async Task<Order> GetOrderById(Guid id)
         {
-            Order order = await _dbContext.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
-
-            return order ?? throw new Exception($"GetOrderById - Order Repository -> Id: {id} wasn't found");
-        }
-
-        public async Task<List<Order>> GetOrdersByUsername(string userName)
-        {
-            var orderList = await _dbContext.Orders
+            var order = await _dbContext.Orders
+                 .Include(o => o.Status)
+                .Include(o => o.Payment)
+                    .ThenInclude(p => p.PaymentMethod)
                 .Include(o => o.Items)
-                .Where(o => o.UserName == userName)
-                .ToListAsync();
-            return orderList;
+                    .ThenInclude(i => i.Book)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            return order ?? throw new Exception($"Order with ID {id} not found.");
         }
+
+        public async Task<List<Order>> GetOrdersByUserId(Guid userId)
+        {
+            var orders = await _dbContext.Orders
+                 .Where(o => o.UserId == userId)
+                 .Include(o => o.Items)
+                     .ThenInclude(oi => oi.Book)
+                 .Include(o => o.Status)
+                 .Include(o => o.Payment)
+                     .ThenInclude(p => p.PaymentMethod)
+                 .Include(o => o.Payment)
+                     .ThenInclude(p => p.CardPayments)
+                 .OrderByDescending(o => o.CreatedAt) 
+                 .ToListAsync();
+
+            return orders;
+        }
+
+
         public async Task<Order> CheckoutOrder(Order order)
         {
-            await _dbContext.AddAsync(order);
+            // 1. Перевірка наявності всіх книг
+            var bookIds = order.Items.Select(i => i.BookId).Distinct().ToList();
+
+            var existingBookIds = await _dbContext.Books
+                .Where(b => bookIds.Contains(b.Id))
+                .Select(b => b.Id)
+                .ToListAsync();
+
+            var missingBooks = bookIds.Except(existingBookIds).ToList();
+            if (missingBooks.Any())
+            {
+                throw new Exception($"Order contains BookIds that do not exist in the database: {string.Join(", ", missingBooks)}");
+            }
+
+            // 2. Обробка платіжної інформації (картки)
+            if (order.Payment != null && order.Payment.CardPayments != null)
+            {
+                // Фільтруємо тільки ті картки, які мають всі потрібні поля
+                order.Payment.CardPayments = order.Payment.CardPayments
+                    .Where(c =>
+                        !string.IsNullOrWhiteSpace(c.CardNumber)
+                        && !string.IsNullOrWhiteSpace(c.Cvv)
+                        && c.ExpiryMonth > 0 && c.ExpiryMonth <= 12
+                        && c.ExpiryYear >= DateTime.UtcNow.Year 
+                    )
+                    .ToList();
+
+                // Якщо жодної валідної картки — очищаємо список
+                if (!order.Payment.CardPayments.Any())
+                {
+                    order.Payment.CardPayments = null;
+                }
+            }
+
+            // 3. Додаємо замовлення
+            await _dbContext.Orders.AddAsync(order);
+
             try
             {
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                // Log the exception details
-                throw new Exception($"Cannot create order: {ex.Message}");
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                throw new Exception($"Cannot create order: {ex.Message}. Inner exception: {innerMessage}");
             }
-            return order;
+
+            // 4. Завантажуємо повні дані
+            var orderWithDetails = await _dbContext.Orders
+                .Include(o => o.Payment)
+                    .ThenInclude(p => p.PaymentMethod)
+                .Include(o => o.Payment)
+                    .ThenInclude(p => p.CardPayments)
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Book)
+                .Include(o => o.Status)
+                .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+            return orderWithDetails!;
         }
 
         public async Task<bool> DeleteOrder(Guid id)
         {
-            try
-            {
-                // Знаходимо замовлення за його ідентифікатором
-                var order = await _dbContext.Orders.FindAsync(id);
+            var order = await _dbContext.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payment)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
-                if (order == null)
-                {
-                    // Замовлення не знайдено
-                    return false;
-                }
+            if (order == null)
+                return false;
 
-                // Видаляємо всі елементи зв'язаних даних (OrderItems) для цього замовлення
-                _dbContext.OrderItems.RemoveRange(order.Items);
+            // Спочатку видаляємо payment
+            if (order.Payment != null)
+                _dbContext.Remove(order.Payment);
 
-                // Видаляємо саме замовлення
-                _dbContext.Orders.Remove(order);
+            _dbContext.OrderItems.RemoveRange(order.Items);
+            _dbContext.Orders.Remove(order);
 
-                // Зберігаємо зміни в базі даних
-                await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Обробляємо помилку видалення
-                // Наприклад, записуємо її до журналу або відправляємо повідомлення про помилку
-                throw new Exception($"An error occurred while deleting the order: {ex.Message}");
-            }
+            return true;
         }
 
         public async Task<bool> UpdateOrder(Order order)
         {
-            try
+            var existingOrder = await _dbContext.Orders
+                .Include(o => o.Items)
+                .Include(o => o.Payment)
+                .FirstOrDefaultAsync(o => o.Id == order.Id);
+
+            if (existingOrder == null)
+                throw new Exception($"Order with ID {order.Id} not found.");
+
+            // Оновлюємо основні поля
+            _dbContext.Entry(existingOrder).CurrentValues.SetValues(order);
+
+            // Оновлення Items
+            _dbContext.OrderItems.RemoveRange(existingOrder.Items);
+            foreach (var item in order.Items)
             {
-                // Завантажуємо замовлення з його елементами з бази даних
-                var existingOrder = await _dbContext.Orders
-                    .Include(o => o.Items)
-                    .FirstOrDefaultAsync(o => o.Id == order.Id);
-
-                if (existingOrder == null)
-                {
-                    throw new Exception($"Order with ID {order.Id} not found.");
-                }
-
-                // Оновлюємо поля замовлення
-                _dbContext.Entry(existingOrder).CurrentValues.SetValues(order);
-
-                // Видаляємо всі елементи замовлення
-                _dbContext.OrderItems.RemoveRange(existingOrder.Items);
-
-                // Додаємо нові елементи замовлення
-                foreach (var item in order.Items)
-                {
-                    existingOrder.Items.Add(item);
-                }
-
-                // Зберігаємо зміни в базі даних
-                await _dbContext.SaveChangesAsync();
-
-                return true;
+                existingOrder.Items.Add(item);
             }
-            catch (DbUpdateConcurrencyException)
+
+            // Оновлення Payment
+            if (existingOrder.Payment != null)
             {
-                throw new Exception($"Concurrency conflict occurred while updating order with ID: {order.Id}");
+                _dbContext.Entry(existingOrder.Payment).CurrentValues.SetValues(order.Payment);
             }
-            catch (DbUpdateException ex)
+            else if (order.Payment != null)
             {
-                throw new Exception($"Error occurred while updating order: {ex.Message}");
+                existingOrder.Payment = order.Payment;
             }
-            catch (Exception ex)
-            {
-                throw new Exception($"Unexpected error occurred while updating order: {ex.Message}");
-            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return true;
         }
 
-        public async Task<bool> UpdateUserNameInOrders(UpdateUsername updateUsername)
+        // Якщо треба буде — наприклад для міграції старих даних — оновити всі UserId
+        public async Task<bool> UpdateUserIdInOrders(Guid oldUserId, Guid newUserId)
         {
-            var orders = await GetOrdersByUsername(updateUsername.OldUsername);
+            var orders = await _dbContext.Orders
+                .Where(o => o.UserId == oldUserId)
+                .ToListAsync();
 
-            if (orders.Any())
+            if (!orders.Any()) return false;
+
+            foreach (var order in orders)
             {
-                foreach (var order in orders)
-                {
-                    order.UserName = updateUsername.NewUsername;
-                }
+                order.UserId = newUserId;
             }
-          
-            try
-            {
-                await _dbContext.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating usernames in orders: {ex.Message}");
-                return false;
-            }
+
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
     }
+
 }

@@ -1,0 +1,67 @@
+﻿@page "/register"
+@inherits Client.Pages.Auth.RegisterBase
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 text-center text-success">Create an Account</h3>
+
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @ErrorMessage
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <EditForm Model="RegisterModel" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="username" class="form-control" @bind-Value="RegisterModel.Username"
+                                       placeholder="Username" autocomplete="username" />
+                            <label for="username">Username</label>
+                            <ValidationMessage For="@(() => RegisterModel.Username)" class="text-danger" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText id="email" type="email" class="form-control" @bind-Value="RegisterModel.Email"
+                                       placeholder="Email" autocomplete="email" />
+                            <label for="email">Email</label>
+                            <ValidationMessage For="@(() => RegisterModel.Email)" class="text-danger" />
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <InputText id="password" type="password" class="form-control" @bind-Value="RegisterModel.Password"
+                                       placeholder="Password" autocomplete="new-password" />
+                            <label for="password">Password</label>
+                            <ValidationMessage For="@(() => RegisterModel.Password)" class="text-danger" />                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm"
+                                style="padding: 0.65rem;" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Registering...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-person-plus me-2"></i>
+                                <span>Register</span>
+                            }
+                        </button>
+                    </EditForm>
+
+                    <div class="text-center mt-3">
+                        <small>
+                            Already have an account?
+                            <a href="/login">Log in</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

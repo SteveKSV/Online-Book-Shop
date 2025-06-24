@@ -1,0 +1,52 @@
+﻿@page "/orders"
+@attribute [Authorize]
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider _authStateProvider
+
+<h1 class="mb-4">Your Orders</h1>
+
+@if (Orders == null)
+{
+    <p class="text-center text-muted">Loading...</p>
+}
+else if (!Orders.Any())
+{
+    <div class="no-orders text-center">
+        <span class="oi oi-inbox" aria-hidden="true"></span>
+        <h3>No orders found</h3>
+        <p>You haven't placed any orders yet.</p>
+    </div>
+}
+else
+{
+    <div class="orders-container">
+        @foreach (var order in Orders)
+        {
+            <div class="card-order mb-4">
+                <h5 class="card-title">Order Total: <span class="text-primary">@order.TotalPrice.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</span></h5>
+
+                <p><strong>Name:</strong> @order.FirstName @order.LastName</p>
+                <p><strong>Email:</strong> @order.EmailAddress</p>
+                <p><strong>Address:</strong> @order.Address</p>
+                <p>
+                    <strong>Status:</strong>
+                    <span class="badge-status">@order.StatusName</span>
+                </p>
+
+                <ul class="list-group">
+                    @foreach (var item in order.Items)
+                    {
+                        <li class="list-group-item">
+                            <div>
+                                <strong>@item.Book.Title</strong>
+                                <small>@item.Quantity pcs</small>
+                                <small>@item.Book.Author</small>
+                            </div>
+                            <span class="price">@item.Price.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("en-US"))</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+}

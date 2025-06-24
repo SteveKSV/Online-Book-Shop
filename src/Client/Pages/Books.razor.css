@@ -27,16 +27,16 @@ h1, h5, .card-body {
 
 
 .scrollable-panel {
-    max-height: 80vh;
-    overflow-y: auto;
-    position: fixed;
-    top: 50px;
-    right: 0;
-    width: 20%;
+    width: 20%; /* Keep the width as needed */
     background-color: #fff;
     padding: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid grey;
+    position: static; /* Remove positioning that might limit expansion */
+    height: auto; /* Allow height to grow with content */
+    overflow: visible; /* Ensure the content can overflow if necessary */
 }
+
 
 @media (max-width: 576px){
     .flex-sm-row {
@@ -90,7 +90,6 @@ h1, h5, .card-body {
         position: static;
         width: 80%;
         margin: 20px auto;
-        overflow-y: auto;
         background-color: #fff;
         padding-top: 12px;
         box-shadow: 0 6px 8px rgba(0, 0, 0, 0.1);
@@ -122,3 +121,4 @@ h1, h5, .card-body {
         flex: 0 0 100%; 
     }
 }
+

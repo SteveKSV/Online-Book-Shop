@@ -1,35 +1,50 @@
-using Catalog;
 using Catalog.Managers.Interfaces;
 using Catalog.Managers;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 //////////////////////// DATABASE CONFIGURATION ///////////////////////////////
-var dbType = Environment.GetEnvironmentVariable("DB_TYPE");
-var connectionString = dbType == "Docker"
-    ? $"mongodb://{Environment.GetEnvironmentVariable("DB_HOST")}:27017/CatalogDb"     // Docker connection string 
-    : builder.Configuration.GetSection("DatabaseSettings:ConnectionString").Value; // Local connection string
-
-builder.Services.Configure<DatabaseSetting>(settings =>
-{
-    settings.ConnectionString = connectionString;
-    settings.DatabaseName = Environment.GetEnvironmentVariable("DB_NAME") ?? "CatalogDb";
-});
-builder.Services.AddTransient<MongoDbContext>();
-
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("WhatToReadConnStr")));
 //////////////////////// MANAGERS CONFIGURATION ///////////////////////////////
 builder.Services.AddScoped<IBookManager, BookManager>();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    var redisUrl = builder.Configuration["RedisUrl"] ?? "localhost:6379";
+
+    options.ConfigurationOptions = new StackExchange.Redis.ConfigurationOptions
+    {
+        EndPoints = { redisUrl },
+        AbortOnConnectFail = false,        // Не кидати виняток, якщо Redis недоступний при старті
+        ConnectTimeout = 100,              // Швидкий фейл при неможливості з'єднання (мс)
+        SyncTimeout = 100,                 // Таймаут синхронних операцій (мс)
+        KeepAlive = 10,                    // Підтримка з'єднання
+        ConnectRetry = 1,                  // Кількість повторів при фейлі з'єднання
+        DefaultDatabase = 0,
+        AllowAdmin = false
+    };
+
+    options.InstanceName = "Catalog_";
+});
+
+
 builder.Services.AddScoped<IGenreManager, GenreManager>();
+builder.Services.AddScoped<ICommentManager, CommentManager>();
+builder.Services.AddScoped<IRatingManager, RatingManager>();
+builder.Services.AddScoped<IRecommendationManager, RecommendationManager>();
+
 //////////////////////// CONTROLLERS CONFIGURATION ///////////////////////////////
 builder.Services.AddControllers();
-
 
 //////////////////////// SWAGGER CONFIGURATION ///////////////////////////////
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o =>
 {
     o.SwaggerDoc("v1", new OpenApiInfo { Title = "Catalog.API", Version = "v1" });
+
 });
 
 var app = builder.Build();
@@ -41,19 +56,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-
-
 app.MapControllers();
-
-var mongoDbContext = app.Services.GetRequiredService<MongoDbContext>();
-var database = mongoDbContext.Database;
-
-// Paths to CSV files. Update paths for Docker volume or container resource folder.
-var booksCsvPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "catalog.csv");
-var warehouseBooksCsvPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "warehouse-books.csv");
-
-
-await DatabaseInitializer.InitializeCollections(database, booksCsvPath, warehouseBooksCsvPath);
-
-
 app.Run();

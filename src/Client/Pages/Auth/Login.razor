@@ -1,0 +1,57 @@
+﻿@page "/login"
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4 text-center text-primary">Welcome Back</h3>
+
+                    <EditForm Model="loginModel" OnValidSubmit="LoginAsync">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="email" class="form-control" @bind-Value="loginModel.Email"
+                                       placeholder="Email" autocomplete="email" />
+                            <label for="email">Email</label>
+                            <ValidationMessage For="@(() => loginModel.Email)" class="text-danger" />
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <InputText id="password" type="password" class="form-control" @bind-Value="loginModel.Password"
+                                       placeholder="Password" autocomplete="current-password" />
+                            <label for="password">Password</label>
+                            <ValidationMessage For="@(() => loginModel.Password)" class="text-danger" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill shadow-sm"
+                                style="padding: 0.65rem;" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Logging in...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                <span>Login</span>
+                            }
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(error))
+                        {
+                            <div class="alert alert-danger mt-3 mb-0" role="alert">@error</div>
+                        }
+                    </EditForm>
+
+                    <div class="text-center mt-3">
+                        <small>
+                            Don’t have an account?
+                            <a href="/register">Register</a>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

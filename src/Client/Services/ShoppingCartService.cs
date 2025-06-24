@@ -1,131 +1,158 @@
-﻿using Client.Models;
+﻿using Client.Models.Basket;
 using Client.Services.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.Extensions.Configuration;
-using System.Net.Http.Json;
+using NuGet.ContentModel;
 using System.Security.Claims;
 
 namespace Client.Services
 {
     public class ShoppingCartService : IShoppingCartService
     {
-        public string UserName { get; private set; }
         private readonly HttpClient _httpClient;
-        private readonly AuthenticationStateProvider _authenticationStateProvider;
+        private readonly AuthenticationStateProvider _authStateProvider;
         private readonly NavigationManager _navigationManager;
         private readonly IConfiguration _configuration;
 
-        public event EventHandler CartChanged;
+        public event EventHandler? CartChanged;
 
-        public ShoppingCartService(HttpClient httpClient, AuthenticationStateProvider authenticationStateProvider, NavigationManager navigationManager, IConfiguration configuration)
+        public Guid UserId { get; private set; }
+
+        public ShoppingCartService(
+            HttpClient httpClient,
+            AuthenticationStateProvider authStateProvider,
+            NavigationManager navigationManager,
+            IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _authenticationStateProvider = authenticationStateProvider;
+            _authStateProvider = authStateProvider;
             _navigationManager = navigationManager;
             _configuration = configuration;
         }
 
         private async Task InitializeUserAsync()
         {
-            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
-            UserName = authState.User.Identity.IsAuthenticated
-                        ? GetUserNameFromClaims(authState.User)
-                        : GetAnonymousCartId();
-        }
+            var authState = await _authStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-        private string GetAnonymousCartId()
-        {
-            return _navigationManager.Uri.Contains("localhost") ? "anonymous_localhost" : Guid.NewGuid().ToString();
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                // Пріоритет: ClaimTypes.NameIdentifier -> "sub" -> "nameid"
+                string? rawUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                                    ?? user.FindFirst("sub")?.Value
+                                    ?? user.FindFirst("nameid")?.Value;
+
+                if (rawUserId != null && Guid.TryParse(rawUserId, out var parsedUserId))
+                {
+                    UserId = parsedUserId;
+                }
+                else
+                {
+                    throw new InvalidOperationException("UserId claim is missing or invalid.");
+                }
+            }
         }
 
         public async Task<ShoppingCart> GetCart()
         {
             await InitializeUserAsync();
-            if (string.IsNullOrEmpty(UserName))
+            var response = await _httpClient.GetAsync($"{_configuration["apiUrl"]}/basket/{UserId}");
+           
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                throw new InvalidOperationException("Username claim not found.");
+                return new ShoppingCart { UserId = UserId };
             }
 
-            var response = await _httpClient.GetAsync($"{_configuration["apiUrl"]}/basket/{UserName}");
-
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<ShoppingCart>() ?? new ShoppingCart();
+                return new ShoppingCart();
             }
-            else
-            {
-                throw new HttpRequestException($"Error retrieving shopping cart. Status code: {response.StatusCode}");
-            }
-        }
-
-        public string GetUserNameFromClaims(ClaimsPrincipal user)
-        {
-            var nameClaim = user.FindFirst(ClaimTypes.Name);
-            return nameClaim?.Value ?? throw new InvalidOperationException("Username claim not found.");
+            
+            var basket = await response.Content.ReadFromJsonAsync<ShoppingCart>();
+            return basket!;
         }
 
         public async Task<int> GetItemCountAsync()
         {
-            var cart = await GetCart();
-            return cart.Items.Count;
+            await InitializeUserAsync();
+
+            var response = await _httpClient.GetAsync($"{_configuration["apiUrl"]}/basket/{UserId}/count");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return 0;
+            }
+
+            var count = await response.Content.ReadFromJsonAsync<int>();
+            return count;
         }
 
-        public async Task AddToCart(ShoppingCartItem item)
-        {
-            var cart = await GetCart();
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == item.ProductId);
-
-            if (existingItem != null)
-            {
-                existingItem.Quantity += item.Quantity;
-            }
-            else
-            {
-                cart.Items.Add(item);
-            }
-
-            var response = await _httpClient.PostAsJsonAsync($"{_configuration["apiUrl"]}/basket", cart);
-            if (response.IsSuccessStatusCode)
-            {
-                CartChanged?.Invoke(this, EventArgs.Empty);
-            }
-            else
-            {
-                throw new HttpRequestException($"Error updating cart. Status code: {response.StatusCode}");
-            }
-        }
-
-        public async Task<ShoppingCart> UpdateItemQuantity(string productId, int quantity)
+        public async Task<ShoppingCart> UpdateItemQuantity(Guid productId, int quantity)
         {
             await InitializeUserAsync();
-            var response = await _httpClient.PutAsync($"{_configuration["apiUrl"]}/basket/{UserName}/items/{productId}/quantity/{quantity}", null);
 
-            if (response.IsSuccessStatusCode)
+            var response = await _httpClient.PutAsync(
+                $"{_configuration["apiUrl"]}/basket/{UserId}/items/{productId}/quantity/{quantity}",
+                null);
+
+            if (!response.IsSuccessStatusCode)
             {
-                CartChanged?.Invoke(this, EventArgs.Empty);
-                return await response.Content.ReadFromJsonAsync<ShoppingCart>() ?? new ShoppingCart();
+                throw new InvalidOperationException("Failed to update quantity.");
             }
-            else
-            {
-                throw new HttpRequestException($"Error updating item quantity. Status code: {response.StatusCode}");
-            }
+
+            var item = await response.Content.ReadFromJsonAsync<ShoppingCartItem>();
+            return await GetCart();
         }
 
-        public async Task<ShoppingCart> RemoveFromCart(string productId)
+        public async Task<ShoppingCart> RemoveFromCart(Guid productId)
         {
             await InitializeUserAsync();
-            var response = await _httpClient.DeleteAsync($"{_configuration["apiUrl"]}/basket/{UserName}/items/{productId}");
 
-            if (response.IsSuccessStatusCode)
+            var response = await _httpClient.DeleteAsync($"{_configuration["apiUrl"]}/basket/{UserId}/items/{productId}");
+
+            if (!response.IsSuccessStatusCode)
             {
-                CartChanged?.Invoke(this, EventArgs.Empty);
-                return await response.Content.ReadFromJsonAsync<ShoppingCart>() ?? new ShoppingCart();
+                throw new InvalidOperationException("Failed to remove item.");
             }
-            else
+
+            return await GetCart();
+        }
+
+        public async Task AddOrUpdateItem(Guid productId, int quantity, decimal price)
+        {
+            await InitializeUserAsync();
+
+            var item = new BasketItemDTO
             {
-                throw new HttpRequestException($"Error removing item from cart. Status code: {response.StatusCode}");
+                BookId = productId,
+                Quantity = quantity,
+                Price = price
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(
+                $"{_configuration["apiUrl"]}/basket/{UserId}/items",
+                item);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException("Failed to add/update item.");
             }
+
+            CartChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public async Task ClearCart()
+        {
+            await InitializeUserAsync();
+
+            var response = await _httpClient.DeleteAsync($"{_configuration["apiUrl"]}/basket/{UserId}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException("Failed to clear basket.");
+            }
+
+            CartChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

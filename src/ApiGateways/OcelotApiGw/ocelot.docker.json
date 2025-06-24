@@ -31,7 +31,7 @@
       ],
       "UpstreamPathTemplate": "/catalog/{id}",
       "UpstreamHttpMethod": [ "GET", "DELETE" ]
-    },  
+    },
     {
       "DownstreamPathTemplate": "/api/book/GetBookByTitle/{title}",
       "DownstreamScheme": "http",
@@ -42,6 +42,18 @@
         }
       ],
       "UpstreamPathTemplate": "/catalog/GetBookByTitle/{title}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/book/{bookId}/comments",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "catalog",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/catalog/{bookId}/comments",
       "UpstreamHttpMethod": [ "GET" ]
     },
     {

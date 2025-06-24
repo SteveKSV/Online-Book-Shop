@@ -1,89 +1,221 @@
-﻿using Catalog.Entities;
+﻿using AutoMapper;
+using Catalog.DTO;
+using Catalog.Entities;
 using Catalog.Helpers;
 using Catalog.Managers.Interfaces;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Catalog.Managers
 {
     public class BookManager : GenericManager<Book>, IBookManager
     {
-        public BookManager(MongoDbContext context) : base(context)
+        private readonly IMapper _mapper;
+        private readonly IDistributedCache _cache;
+
+        public BookManager(AppDbContext context, IMapper mapper, IDistributedCache cache) : base(context)
         {
+            _mapper = mapper;
+            _cache = cache;
         }
 
-        public async Task<PagedList<Book?>> GetBooks(
-            PaginationParams? paginationParams, string? title, string? sortOrder,
-            string genre)
+        private async Task<T?> GetOrSetCacheAsync<T>(string key, Func<Task<T>> getData, TimeSpan? expiry = null)
         {
-            var filterBuilder = new FilterDefinitionBuilder<Book>();
-            var filter = filterBuilder.Empty;
-
-            // Filter by title if provided
-            if (!string.IsNullOrEmpty(title))
-            {
-                filter &= filterBuilder.Regex(x => x.Title, new BsonRegularExpression(title, "i"));
-            }
-
-            // Filter by genre if provided
-            if (!string.IsNullOrEmpty(genre))
-            {
-                filter &= filterBuilder.Regex(x => x.genres, new BsonRegularExpression(genre, "i"));
-            }
-
-            // Create the query with the filter
-            var query = _collection.Find(filter);
-
             try
             {
-                // Get total count for pagination
-                var totalCount = await _collection.CountDocumentsAsync(filter);
-
-                // Add sorting
-                if (!string.IsNullOrEmpty(sortOrder))
+                var cached = await _cache.GetStringAsync(key);
+                if (!string.IsNullOrEmpty(cached))
                 {
-                    switch (sortOrder.ToLower())
-                    {
-                        case "asc":
-                            query = query.SortBy(book => book.Price);
-                            break;
-                        case "desc":
-                            query = query.SortByDescending(book => book.Price);
-                            break;
-                    }
+                    return JsonSerializer.Deserialize<T>(cached);
                 }
 
-                // Apply pagination
+                var data = await getData();
+                var jsonData = JsonSerializer.Serialize(data);
+                var options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = expiry ?? TimeSpan.FromMinutes(5)
+                };
+                await _cache.SetStringAsync(key, jsonData, options);
+                return data;
+            }
+            catch
+            {
+                // Якщо Redis або інший кеш не доступний — повертаємо напряму з бази
+                return await getData();
+            }
+        }
+
+        public async Task<PagedList<BookDTO?>> GetBooks(PaginationParams? paginationParams, string? title, string? sortOrder, string? genre, string? sortRating)
+        {
+            string cacheKey = $"books:{paginationParams?.PageNumber}:{paginationParams?.PageSize}:{title}:{sortOrder}:{genre}:{sortRating}";
+
+            var cached = await GetOrSetCacheAsync($"books:{paginationParams?.PageNumber}:{paginationParams.PageSize}:{title}:{sortOrder}:{genre}:{sortRating}", async () =>
+            {
+                var query = _dbSet.AsNoTracking().AsQueryable();
+
+                if (!string.IsNullOrEmpty(title))
+                {
+                    query = query.Where(b => EF.Functions.Like(b.Title, $"%{title}%"));
+                }
+
+                if (!string.IsNullOrEmpty(genre))
+                {
+                    query = query.Where(b => b.Genre.Name == genre);
+                }
+
+                if (sortOrder?.ToLower() == "asc")
+                    query = query.OrderBy(b => b.Price).ThenBy(b => b.Title);
+                else if (sortOrder?.ToLower() == "desc")
+                    query = query.OrderByDescending(b => b.Price).ThenByDescending(b => b.Title);
+
+                if (sortRating?.ToLower() == "asc")
+                    query = query.OrderBy(b => b.AverageRating).ThenBy(b => b.Title);
+                else if (sortRating?.ToLower() == "desc")
+                    query = query.OrderByDescending(b => b.AverageRating).ThenByDescending(b => b.Title);
+
+                var totalCount = await query.CountAsync();
+
                 var books = await query
                     .Skip((paginationParams!.PageNumber - 1) * paginationParams.PageSize)
-                    .Limit(paginationParams.PageSize)
+                    .Take(paginationParams.PageSize)
                     .ToListAsync();
 
-                return new PagedList<Book?>(books!, (int)totalCount, paginationParams.PageNumber, paginationParams.PageSize);
+                var bookDtos = _mapper.Map<List<BookDTO>>(books);
+                var paged = new PagedList<BookDTO>(bookDtos, totalCount, paginationParams.PageNumber, paginationParams.PageSize);
+
+                return CachedPagedList<BookDTO?>.FromPagedList(paged!);
+            });
+
+            return cached!.ToPagedList();
+        }
+
+        public async Task<BookDTO?> GetBookByTitle(string title)
+        {
+            string cacheKey = $"book:title:{title}";
+
+            return await GetOrSetCacheAsync(cacheKey, async () =>
+            {
+                var book = await _dbSet.Include(c => c.Genre)
+                                       .FirstOrDefaultAsync(b => b.Title == title);
+                return _mapper.Map<BookDTO?>(book);
+            });
+        }
+
+        public async Task<BookDTO?> GetBookById(Guid id)
+        {
+            string cacheKey = $"book:id:{id}";
+
+            return await GetOrSetCacheAsync(cacheKey, async () =>
+            {
+                var book = await _dbSet
+                    .Include(b => b.Genre)
+                    .Include(b => b.Comments)
+                    .FirstOrDefaultAsync(b => b.Id == id);
+
+                return _mapper.Map<BookDTO?>(book);
+            });
+        }
+
+        public async Task<PagedList<CommentDTO>> GetCommentsForBook(Guid bookId, PaginationParams paginationParams)
+        {
+            var query = _context.Comments.Include(c => c.User)
+                .Where(c => c.BookId == bookId)
+                .OrderByDescending(c => c.CommentedAt)
+                .AsQueryable();
+
+            var totalCount = await query.CountAsync();
+
+            var comments = await query
+                .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+                .Take(paginationParams.PageSize)
+                .ToListAsync();
+
+            var commentDtos = _mapper.Map<List<CommentDTO>>(comments);
+            return new PagedList<CommentDTO>(commentDtos, totalCount, paginationParams.PageNumber, paginationParams.PageSize);
+        }
+
+
+        public async Task<BookDTO> CreateBookAsync(BookCreateDTO newBookDto)
+        {
+            try
+            {
+                var book = _mapper.Map<Book>(newBookDto);
+                book.Id = Guid.NewGuid();
+                book.AverageRating = 3;
+
+                await _dbSet.AddAsync(book);
+                await _context.SaveChangesAsync();
+
+                await _context.Entry(book).Reference(b => b.Genre).LoadAsync();
+
+                return _mapper.Map<BookDTO>(book);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
-                throw;
+                throw new Exception("Failed to create book.", ex);
             }
         }
 
-        public async Task<Book> GetBookByTitle(string title)
+        public async Task<BookDTO?> UpdateBookAsync(BookCreateDTO updatedBookDto)
         {
-            return await _collection
-                          .Find(p => p.Title == title)
-                          .FirstOrDefaultAsync();
+            try
+            {
+                if (updatedBookDto.Id == Guid.Empty)
+                    throw new ArgumentException("Id книги має бути вказаний для оновлення.");
+
+                var existingBook = await _dbSet
+                    .Include(b => b.Genre)
+                    .Include(b => b.Comments)
+                    .FirstOrDefaultAsync(b => b.Id == updatedBookDto.Id);
+
+                if (existingBook == null)
+                    return null;
+
+                _mapper.Map(updatedBookDto, existingBook);
+                await _context.SaveChangesAsync();
+
+                // Очистка кешу після оновлення
+                var cacheKey = $"book:id:{updatedBookDto.Id}";
+                try
+                {
+                    await _cache.RemoveAsync(cacheKey);
+                }
+                catch { }
+
+                return _mapper.Map<BookDTO>(existingBook);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to update book.", ex);
+            }
         }
 
-        public async Task<Book> GetBookById(string id)
+        public async Task<bool> DeleteEntity(Guid id)
         {
-            return await _collection
-                           .Find(p => p.Id == id)
-                           .FirstOrDefaultAsync();
+            try
+            {
+                var entity = await _dbSet.FindAsync(id);
+                if (entity == null)
+                    return false;
+
+                _dbSet.Remove(entity);
+                await _context.SaveChangesAsync();
+
+                // Очистка кешу після видалення
+                var cacheKey = $"book:id:{id}";
+                try
+                {
+                    await _cache.RemoveAsync(cacheKey);
+                }
+                catch { }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to delete book with id '{id}'.", ex);
+            }
         }
     }
 }

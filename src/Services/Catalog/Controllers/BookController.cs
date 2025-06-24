@@ -1,4 +1,6 @@
-﻿using Catalog.Entities;
+﻿using Catalog.DTO;
+using Catalog.Entities;
+using Catalog.Helpers;
 using Catalog.Managers.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +11,6 @@ namespace Catalog.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //[Authorize]
     public class BookController : ControllerBase
     {
         private readonly IBookManager _manager;
@@ -20,85 +21,176 @@ namespace Catalog.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<Book>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks(
+        [ProducesResponseType(typeof(PagedList<BookDTO>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<PagedList<BookDTO>>> GetBooks(
             [FromQuery] PaginationParams? paginationParams = null, string? title = null, string? sortOrder = null,
-            [FromQuery] string? genre = null
+            [FromQuery] string? genre = null, [FromQuery] string? sortRating = null
             )
         {
-            var products = await _manager.GetBooks(paginationParams, title, sortOrder, genre);
-            var metadata = new
+            try
             {
-                products.TotalCount,
-                products.PageSize,
-                products.CurrentPage,
-                products.TotalPages,
-                products.HasNext,
-                products.HasPrevious
-            };
-            
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
-            
-            return Ok(products);
+                var products = await _manager.GetBooks(paginationParams, title, sortOrder, genre, sortRating);
+                var metadata = new
+                {
+                    products.TotalCount,
+                    products.PageSize,
+                    products.CurrentPage,
+                    products.TotalPages,
+                    products.HasNext,
+                    products.HasPrevious
+                };
+
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+                return Ok(products);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while fetching books: {ex.Message}");
+            }
         }
 
-        [HttpGet("{id}", Name = "GetBookById")]
-        [ProducesResponseType(typeof(Book), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBookById(string id)
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(BookDTO), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<BookDTO>> GetBookById(Guid id)
         {
-            var book = await _manager.GetBookById(id);
-
-            if (book != null)
+            try
             {
+                var book = await _manager.GetBookById(id);
+
+                if (book == null)
+                    return NotFound($"Book with id '{id}' not found.");
+
                 return Ok(book);
             }
-
-            return NotFound();
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while fetching book by id: {ex.Message}");
+            }
         }
 
         [HttpGet("GetBookByTitle/{title}")]
-        [ProducesResponseType(typeof(Book), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<Book>> GetBookByTitle(string title)
+        [ProducesResponseType(typeof(BookDTO), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<BookDTO>> GetBookByTitle(string title)
         {
-            var book = await _manager.GetBookByTitle(title);
-            return Ok(book);
+            try
+            {
+                var book = await _manager.GetBookByTitle(title);
+
+                if (book == null)
+                    return NotFound($"Book with title '{title}' not found.");
+
+                return Ok(book);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while fetching book by title: {ex.Message}");
+            }
         }
-        
-        [HttpPost]
-        [ProducesResponseType(typeof(Book), (int)HttpStatusCode.Created)]
-        public async Task<ActionResult<Book>> CreateBook([FromBody] Book book)
+
+        [HttpGet("{bookId}/comments")]
+        [ProducesResponseType(typeof(PagedList<CommentDTO>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<PagedList<CommentDTO>>> GetCommentsForBook(Guid bookId, [FromQuery] PaginationParams paginationParams)
         {
-            // Generate a random 24-digit hexadecimal string for the Id
-            book.Id = GenerateRandomHexadecimalId();
+            try
+            {
+                var commentsPaged = await _manager.GetCommentsForBook(bookId, paginationParams);
 
-            await _manager.CreateEntity(book);
+                var metadata = new
+                {
+                    commentsPaged.TotalCount,
+                    commentsPaged.PageSize,
+                    commentsPaged.CurrentPage,
+                    commentsPaged.TotalPages,
+                    commentsPaged.HasNext,
+                    commentsPaged.HasPrevious
+                };
 
-            // Issue may be here: Check the 'new { id = book.Id }' part
-            return CreatedAtRoute("GetBookById", new { id = book.Id }, book);
+                Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(metadata));
+
+                return Ok(commentsPaged);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while fetching comments: {ex.Message}");
+            }
+        }
+
+
+        [HttpPost]
+        [ProducesResponseType(typeof(BookDTO), (int)HttpStatusCode.Created)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<ActionResult<BookDTO>> CreateBook([FromBody] BookCreateDTO bookCreateDto)
+        {
+            try
+            {
+                var createdBook = await _manager.CreateBookAsync(bookCreateDto);
+
+                // Тут повертаємо Id створеної книги, щоб CreatedAtRoute працював коректно
+                return CreatedAtRoute("GetBookById", new { id = createdBook.Id }, createdBook);
+            }
+            catch (ArgumentException argEx)
+            {
+                return BadRequest(argEx.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while creating book: {ex.Message}");
+            }
         }
 
         [HttpPut]
-        [ProducesResponseType(typeof(Book), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> UpdateBook([FromBody] Book book)
+        [ProducesResponseType(typeof(BookDTO), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> UpdateBook([FromBody] BookCreateDTO bookUpdateDto)
         {
-            return Ok(await _manager.UpdateEntity(book));
+            try
+            {
+                var updatedBook = await _manager.UpdateBookAsync(bookUpdateDto);
+
+                if (updatedBook == null)
+                    return NotFound($"Book with id '{bookUpdateDto.Id}' not found.");
+
+                return Ok(updatedBook);
+            }
+            catch (ArgumentException argEx)
+            {
+                return BadRequest(argEx.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while updating book: {ex.Message}");
+            }
         }
 
-        [HttpDelete("{id:length(24)}")]
-        [ProducesResponseType(typeof(Book), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> DeleteBookById(string id)
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(bool), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+        public async Task<IActionResult> DeleteBookById(Guid id)
         {
-            return Ok(await _manager.DeleteEntity(id));
-        }
-       
-        private static string GenerateRandomHexadecimalId()
-        {
-            // Generate a random 24-digit hexadecimal string
-            var random = new Random();
-            var buffer = new byte[12];
-            random.NextBytes(buffer);
-            var randomHexId = string.Concat(buffer.Select(b => b.ToString("x2")));
-            return randomHexId;
+            try
+            {
+                var deleted = await _manager.DeleteEntity(id);
+
+                if (!deleted)
+                    return NotFound($"Book with id '{id}' not found.");
+
+                return Ok($"Book with id '{id}' deleted successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error occurred while deleting book: {ex.Message}");
+            }
         }
     }
 }
