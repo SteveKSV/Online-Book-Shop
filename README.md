@@ -86,16 +86,14 @@ The application uses **NLP** and **Active Learning** to automatically classify b
 
 ## 🗂 Project Structure
 
-📦 WhatToReadApp
-├── Client # Blazor frontend
-├── Gateway # API Gateway
-├── Identity.API # Auth microservice
-├── Catalog.API # Book management
-├── Basket.API # Shopping cart
-├── Order.API # Orders and checkout
-├── Flask.API # Active learning pipeline (Python)
-└── Shared # Common resources
-
+- **Client** – Blazor frontend
+- **Gateway** – API Gateway
+- **Identity.API** – Authentication microservice
+- **Catalog.API** – Book management microservice
+- **Basket.API** – Shopping cart microservice
+- **Order.API** – Orders and checkout microservice
+- **Flask.API** – Active learning pipeline (Python)
+- **Shared** – Common resources
 
 ---
 
